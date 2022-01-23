@@ -240,7 +240,7 @@ class VectorNet(nn.Module):
                 #print("agents_input.shape:", agents_input.shape)
                 hist_out = self.hist_tf(agents_input, self.query_batches, None, None)
                 #print("hist_out.shape: ", hist_out.shape)
-                lane_mask = torch.ones(1, 1, neighbor_num).cuda()
+                lane_mask = torch.ones(1, 1, neighbor_num).to(device)
                 #print("lanes.unsqueeze(0)", lanes.unsqueeze(0).shape, "lane_mask.shape", lane_mask.shape)
                 lane_mem = self.lane_enc(self.lane_emb(lanes.unsqueeze(0)), lane_mask)
                 #print("lane_mem.shape: ", lane_mem.shape)
@@ -259,7 +259,7 @@ class VectorNet(nn.Module):
                 # Social layer
                 #print(agents.unsqueeze(0).shape)
                 social_inp = self.fusion2(torch.cat([agents.unsqueeze(0), dist], -1))
-                social_mask = torch.ones((1, 1, social_num)).cuda()
+                social_mask = torch.ones((1, 1, social_num)).to(device)
                 social_mem = self.social_enc(social_inp, social_mask)
                 social_out = social_mem.unsqueeze(
                     dim=2).repeat(1, 1, self.num_queries, 1)
