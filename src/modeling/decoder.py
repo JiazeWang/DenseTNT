@@ -82,8 +82,8 @@ class Decoder_predict(nn.Module):
             #print(len(goals_2D), len(positive_points), len(negative_points))
             negative_points = random.sample(negative_points, self.negative_num)
             positive_points = utils.get_neighbour_points_positive(target_point, num = self.positive_num)
-            positive_points = torch.from_numpy(np.array(positive_points)).cuda()
-            negative_points = torch.from_numpy(np.array(negative_points)).cuda()
+            positive_points = torch.from_numpy(np.array(positive_points)).to(device)
+            negative_points = torch.from_numpy(np.array(negative_points)).to(device)
             total_points = torch.cat([positive_points, negative_points], dim=0)
             total_points_class = torch.cat([torch.ones(self.positive_num), torch.zeros(self.negative_num)])
             #print(positive_points.shape, negative_points.shape, total_points.shape)
@@ -91,8 +91,8 @@ class Decoder_predict(nn.Module):
             class_i = outputs_class[i][0]
             traj_i = outputs_traj[i][0]
             #print("coord.shape", coord_i.shape, class_i.shape, traj_i.shape)
-            positive_points_class = torch.ones(self.positive_num).cuda()
-            gt_points = torch.from_numpy(gt_points).cuda()
+            positive_points_class = torch.ones(self.positive_num).to(device)
+            gt_points = torch.from_numpy(gt_points).to(device)
             loss_i, DE_i = self.SetCriterion(positive_points, positive_points_class, gt_points, coord_i, class_i, traj_i)
             loss[i] = loss_i
             DE[i][-1] = DE_i
