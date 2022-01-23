@@ -136,8 +136,8 @@ class SetCriterion(nn.Module):
 
         target_point = torch.stack([total_points[i] for i in target_indices])
         target_class = torch.stack([total_points_class[i] for i in target_indices])
-        target_traj = gt_points
-
+        target_traj = gt_points.unsqueeze(0).repeat(10, 1, 1).squeeze(0)
+        #print(target_traj.shape, predict_traj.shape)
         traj_loss = F.smooth_l1_loss(predict_traj.float(), target_traj.float())
         #print("traj_loss", traj_loss)
         #print(predict_class.unsqueeze(1).shape, target_class.shape)
