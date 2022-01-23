@@ -177,9 +177,9 @@ def get_sub_map(args: utils.Args, x, y, city_name, vectors=[], polyline_spans=[]
                 point_pre = point
 
             end = len(vectors)
+            #print("start, end:", start, end)
             if start < end:
                 polyline_spans.append([start, end])
-
     return (vectors, polyline_spans)
 
 
@@ -283,14 +283,16 @@ def preprocess(args, id2info, mapping):
 
     t = len(vectors)
     mapping['map_start_polyline_idx'] = len(polyline_spans)
+    #print("vectors.shape", vectors)
     if args.use_map:
         vectors, polyline_spans = get_sub_map(args, mapping['cent_x'], mapping['cent_y'], mapping['city_name'],
                                               vectors=vectors,
                                               polyline_spans=polyline_spans, mapping=mapping)
 
-    # logging('len(vectors)', t, len(vectors), prob=0.01)
+    #print('len(vectors)', len(vectors))
 
     matrix = np.array(vectors)
+    #print("matrix.shape: ", matrix[0])
     # matrix = np.array(vectors, dtype=float)
     # del vectors
 

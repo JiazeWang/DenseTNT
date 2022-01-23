@@ -22,7 +22,7 @@ import torch
 from matplotlib.path import Path
 from matplotlib.pyplot import MultipleLocator
 from torch import Tensor
-
+import random
 import utils_cython, structs
 
 _False = False
@@ -67,7 +67,7 @@ def add_argument(parser):
                         type=float,
                         help="The weight decay rate for Adam.")
     parser.add_argument("--num_train_epochs",
-                        default=20.0,
+                        default=50.0,
                         type=float,
                         help="Total number of training epochs to perform.")
     parser.add_argument('--seed',
@@ -803,6 +803,8 @@ def merge_tensors(tensors: List[torch.Tensor], device, hidden_size=None) -> Tupl
         if tensor is not None:
             res[i][:tensor.shape[0]] = tensor
     return res, lengths
+
+
 
 
 def de_merge_tensors(tensor: Tensor, lengths):
@@ -1769,3 +1771,58 @@ def get_static_var(obj, name, default=None, path=None):
 
 def to_numpy(tensor):
     return tensor.detach().cpu().numpy()
+
+
+
+
+def merge_tensors_traj(tensors: List[torch.Tensor], device, hidden_size0=50, hidden_size1=30, hidden_size2=2) -> Tuple[Tensor, List[int]]:
+    """
+    merge a list of tensors into a tensor
+    """
+    lengths = []
+    #hidden_size = args.hidden_size if hidden_size is None else hidden_size
+    for tensor in tensors:
+        lengths.append(tensor.shape[0] if tensor is not None else 0)
+    res = torch.zeros([len(tensors), max(lengths), hidden_size0, hidden_size1, hidden_size2], device=device)
+    for i, tensor in enumerate(tensors):
+        if tensor is not None:
+            res[i][:tensor.shape[0]] = tensor
+    return res, lengths
+
+
+def merge_tensors_coor(tensors: List[torch.Tensor], device, hidden_size0=50, hidden_size1=2) -> Tuple[Tensor, List[int]]:
+    """
+    merge a list of tensors into a tensor
+    """
+    lengths = []
+    #hidden_size = args.hidden_size if hidden_size is None else hidden_size
+    for tensor in tensors:
+        lengths.append(tensor.shape[0] if tensor is not None else 0)
+    res = torch.zeros([len(tensors), max(lengths), hidden_size0, hidden_size1], device=device)
+    for i, tensor in enumerate(tensors):
+        if tensor is not None:
+            res[i][:tensor.shape[0]] = tensor
+    return res, lengths
+
+
+def merge_tensors_class(tensors: List[torch.Tensor], device, hidden_size0=50) -> Tuple[Tensor, List[int]]:
+    """
+    merge a list of tensors into a tensor
+    """
+    lengths = []
+    #hidden_size = args.hidden_size if hidden_size is None else hidden_size
+    for tensor in tensors:
+        lengths.append(tensor.shape[0] if tensor is not None else 0)
+    res = torch.zeros([len(tensors), max(lengths), hidden_size0], device=device)
+    for i, tensor in enumerate(tensors):
+        if tensor is not None:
+            res[i][:tensor.shape[0]] = tensor
+    return res, lengths
+
+
+def get_neighbour_points_positive(point, num = 25, neighbour_dis=2):
+    # grid = np.zeros([300, 300], dtype=int)
+    points = []
+    for i in range(0, num):
+        points.append([point[0]+(random.random()-0.5)*2*neighbour_dis, point[1]+(random.random()-0.5)*2*neighbour_dis])
+    return points
