@@ -44,6 +44,7 @@ class Decoder_predict(nn.Module):
         global args
         args = args_
         hidden_size = args.hidden_size
+        self.neighbour_dis = args.neighbour_dis
         self.future_frame_num = args.future_frame_num
         self.mode_num = args.mode_num
         self.future_frame_num = 30
@@ -83,7 +84,7 @@ class Decoder_predict(nn.Module):
             positive_points = [goals_2D[i] for i in positive_index]
             #print(len(goals_2D), len(positive_points), len(negative_points))
             negative_points = random.sample(negative_points, self.negative_num)
-            positive_points = utils.get_neighbour_points_positive(target_point, num = self.positive_num)
+            positive_points = utils.get_neighbour_points_positive(target_point, num = self.positive_num, neighbour_dis=self.neighbour_dis)
             positive_points = torch.from_numpy(np.array(positive_points)).to(device)
             negative_points = torch.from_numpy(np.array(negative_points)).to(device)
             total_points = torch.cat([positive_points, negative_points], dim=0)

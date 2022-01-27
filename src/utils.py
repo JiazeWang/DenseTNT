@@ -199,7 +199,9 @@ def add_argument(parser):
     parser.add_argument("--mode_num",
                         default=6,
                         type=int)
-
+    parser.add_argument("--neighbour_dis",
+                        default=2.0,
+                        type=float)
 
 class Args:
     data_dir = None
@@ -1452,6 +1454,8 @@ def to_origin_coordinate(points, idx_in_batch, scale=None):
             point[1] *= scale
 
 
+
+
 def to_relative_coordinate(points, x, y, angle):
     for point in points:
         point[0], point[1] = rotate(point[0] - x, point[1] - y, angle)
@@ -1823,6 +1827,60 @@ def merge_tensors_class(tensors: List[torch.Tensor], device, hidden_size0=50) ->
 def get_neighbour_points_positive(point, num = 25, neighbour_dis=2):
     # grid = np.zeros([300, 300], dtype=int)
     points = []
-    for i in range(0, num):
+    points.append(point)
+    for i in range(0, num-1):
         points.append([point[0]+(random.random()-0.5)*2*neighbour_dis, point[1]+(random.random()-0.5)*2*neighbour_dis])
     return points
+
+
+def goals_NMS(mapping: Dict, goals_2D: np.ndarray, scores: np.ndarray, traj_i: np.ndarray, threshold, speed=None, gt_goal=None, mode_num=6):
+    argsort = np.argsort(-scores)
+    goals_2D = goals_2D[argsort]
+    scores = scores[argsort]
+    traj = traj_i[argsort]
+    add_eval_param(f'DY_NMS={threshold}')
+
+    #speed_scale_factor = utils_cython.speed_scale_factor(speed)
+    #threshold = threshold * speed_scale_factor
+
+    pred_goals = []
+    pred_probs = []
+    pred_traj = []
+
+    def in_predict(pred_goals, point, threshold):
+        return np.min(get_dis_point_2_points(point, pred_goals)) < threshold
+
+    for i in range(len(goals_2D)):
+        if len(pred_goals) > 0 and in_predict(np.array(pred_goals), goals_2D[i], threshold):
+            continue
+        else:
+            pred_goals.append(goals_2D[i])
+            pred_probs.append(scores[i])
+            pred_traj.append(traj[i])
+            if len(pred_goals) == mode_num:
+                break
+
+    while len(pred_goals) < mode_num:
+        i = np.random.randint(0, len(goals_2D))
+        pred_goals.append(goals_2D[i])
+        pred_probs.append(scores[i])
+        pred_traj.append(traj[i])
+
+    pred_goals = np.array(pred_goals)
+    pred_probs = np.array(pred_probs)
+    pred_traj = np.array(pred_traj)
+
+    FDE = np.inf
+    if gt_goal is not None:
+        for each in pred_goals:
+            FDE = min(FDE, get_dis_point2point(each, gt_goal))
+
+    return pred_goals, pred_probs, pred_traj
+
+def convert_to_origin_coordinate(points, idx_in_batch, scale=None):
+    for point in points:
+        point[0], point[1] = rotate(point[0] - origin_point[idx_in_batch][0],
+                                    point[1] - origin_point[idx_in_batch][1], origin_angle[idx_in_batch])
+        if scale is not None:
+            point[0] *= scale
+            point[1] *= scale
