@@ -55,7 +55,7 @@ class Decoder_predict(nn.Module):
         self.nms_threshold = 2
         self.eval_num = 6
 
-    def forward(self, mapping, batch_size, outputs_coord, outputs_class, outputs_traj, coord_length, device):
+    def forward(self, mapping, batch_size, outputs_coord, outputs_class, outputs_traj, outputs_centerness, coord_length, device):
         #print("start")
         labels = utils.get_from_mapping(mapping, 'labels')
         labels_is_valid = utils.get_from_mapping(mapping, 'labels_is_valid')
@@ -94,11 +94,12 @@ class Decoder_predict(nn.Module):
             coord_i = outputs_coord[i][0]
             class_i = outputs_class[i][0]
             traj_i = outputs_traj[i][0]
+            centerness_i = outputs_centerness[i][0]
             #print("coord.shape", coord_i.shape, class_i.shape, traj_i.shape)
             positive_points_class = torch.ones(self.positive_num).to(device)
             negative_points_class = torch.zeros(self.negative_num).to(device)
             gt_points = torch.from_numpy(gt_points).to(device)
-            loss_i, DE_i = self.SetCriterion(positive_points, positive_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i, device)
+            loss_i, DE_i = self.SetCriterion(positive_points, positive_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i, centerness_i, device)
             loss[i] = loss_i
             DE[i][-1] = DE_i
 
@@ -155,28 +156,27 @@ class SetCriterion(nn.Module):
         self.class_loss_w = 1
         self.negative_points_num = 40
 
-    def distance_loss(self, gt_point, coord_i):
+
+    def centerness_gt(self, gt_point, coord_i):
 
         #print(gt_point.shape, coord_i.shape)
 
         batch_size = coord_i.shape[0]
-        loss = torch.zeros([batch_size, 1])
+        distance_all = torch.zeros([batch_size, 1])
         for i in range(0, batch_size):
             distance = torch.sqrt((gt_point[0] - coord_i[i][0]) ** 2 + (gt_point[1] - coord_i[i][1]) ** 2)
-            if distance >=4:
-                distance_error_i = 1
+            if distance >=2:
+                centerness_i = 0
             else:
-                distance_error_i = distance/4
-            #print(i, loss[i].shape)
-            loss[i] = distance_error_i
-        #print("loss_now", loss)
-        return loss
+                centerness_i = 1 - torch.sqrt(distance/2)
+            distance_all[i] = centerness_i
+        return distance_all
 
-    def forward(self, total_points, total_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i, device):
+    def forward(self, total_points, total_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i, centerness_i, device):
         #print("loss: ", total_points.shape, total_points_class.shape, coord_i.shape, class_i.shape, traj_i.shape)
 
-        distance_loss = self.distance_loss(total_points[0], coord_i).to(device)
-
+        centerness_gt = self.centerness_gt(total_points[0], coord_i).to(device)
+        #print("centerness_gt.shape:", centerness_gt.shape)
         indices = self.matcher(total_points, total_points_class, coord_i, class_i)
         predict_indices = indices[0][0]
         target_indices = indices[0][1]
@@ -184,14 +184,24 @@ class SetCriterion(nn.Module):
         predict_points = torch.stack([coord_i[i] for i in predict_indices])
         predict_class = torch.stack([class_i[i] for i in predict_indices])
         predict_traj = torch.stack([traj_i[i] for i in predict_indices])
-
-        distance_loss = torch.sum(torch.stack([distance_loss[i] for i in predict_indices]))
-
-        #print(distance_loss.shape)
-
-        target_point = torch.stack([total_points[i] for i in target_indices])
+        predict_centerness = torch.stack([centerness_i[i] for i in predict_indices])
+        #print("predict_centerness.shape", predict_centerness.shape)
         target_class = torch.stack([total_points_class[i] for i in target_indices])
+        target_centerness = torch.stack([centerness_gt[i] for i in target_indices])
+        #print("target_centerness.shape", target_centerness.shape)
+        #print("predict: ", predict_centerness)
+        #print("target: ", target_centerness)
+        target_centerness = target_centerness.detach()
+        centerness_loss = F.binary_cross_entropy(predict_centerness.float(), target_centerness.squeeze().float())
+        #print("centerness_loss:", centerness_loss)
+
         target_traj = gt_points.unsqueeze(0).repeat(10, 1, 1).squeeze(0)
+
+        #v2 loss added
+        target_point = total_points[0].unsqueeze(0).repeat(10, 1)
+        point_loss = F.smooth_l1_loss(predict_points.float(), target_point.float())
+        #point_loss = F.mse_loss(predict_points.float(), target_point.float())
+        #print("point_loss", point_loss)
         #print(target_traj.shape, predict_traj.shape)
 
         total_shape = coord_i.shape[0]
@@ -202,18 +212,13 @@ class SetCriterion(nn.Module):
             if i not in predict_indices:
                 negative_indices.append(i)
         negative_predict_class = torch.stack([class_i[i] for i in negative_indices])
-        #print(negative_predict_class)
-        #print(negative_points_class)
-
         negative_class_loss = F.binary_cross_entropy(negative_predict_class.float(), negative_points_class.float())
 
         traj_loss = F.smooth_l1_loss(predict_traj.float(), target_traj.float())
-        #print("traj_loss", traj_loss)
-        #print(predict_class.unsqueeze(1).shape, target_class.shape)
-        #   predict_class = torch.stack([class_i[i] for i if i is not in predict_indices])
-        #print(predict_class.shape)
         class_loss = F.binary_cross_entropy(predict_class.float(), target_class.float())
-        total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*(class_loss + negative_class_loss) + distance_loss
+        total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*(class_loss + negative_class_loss) + point_loss + centerness_loss
+        #print("class_i", class_i.shape, centerness_i.shape)
+        class_i = class_i.mul(centerness_i)
         index = torch.argmax(class_i).item()
         DE = torch.sqrt((coord_i[index][0] - gt_points[-1][0]) ** 2 + (coord_i[index][1] - gt_points[-1][1]) ** 2)
         #print("DE", DE)

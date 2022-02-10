@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 import structs
 import utils
-from modeling.vectornet import VectorNet
+from modeling.vectornet_centerness import VectorNet
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
@@ -65,6 +65,7 @@ def do_eval(args):
         raise ValueError("model_recover_path not specified.")
 
     model_recover = torch.load(args.model_recover_path)
+
     model.load_state_dict(model_recover)
 
     if 'set_predict-train_recover' in args.other_params and 'complete_traj' in args.other_params:

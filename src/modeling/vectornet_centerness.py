@@ -5,13 +5,12 @@ import torch
 import torch.nn.functional as F
 from torch import nn, Tensor
 import copy
-#from modeling.decoder_fast import Decoder_predict
 from modeling.decoder_centerness import Decoder_predict
-#from modeling.decoder_fast_d_loss_v2 import Decoder_predict
+#from modeling.decoder_centerness_dis import Decoder_predict
 from modeling.lib import MLP, GlobalGraph, LayerNorm, SubGraph, CrossAttention, GlobalGraphRes
 import utils
 from modeling.TF_utils import (Decoder, DecoderLayer, Encoder, EncoderDecoder,
-                        EncoderLayer, GeneratorWithParallelHeads626,
+                        EncoderLayer, GeneratorWithParallelHeads_centerness,
                         LinearEmbedding, MultiHeadAttention,
                         PointerwiseFeedforward, PositionalEncoding, EncoderLayer_NEW,
                         SublayerConnection, Generator_full)
@@ -170,7 +169,7 @@ class VectorNet(nn.Module):
             nn.ReLU(),
             nn.Linear(pos_dim, pos_dim, bias=True))
 
-        self.prediction_header = GeneratorWithParallelHeads626(d_model*2, dec_out_size, dropout)
+        self.prediction_header = GeneratorWithParallelHeads_centerness(d_model*2, dec_out_size, dropout)
 
         self.generator_header = Generator_full(d_model*3, 60, dropout)
 
@@ -280,62 +279,30 @@ class VectorNet(nn.Module):
             social_num = agent_batch.shape[1]
             neighbor_num = lane_batch.shape[1]
             self.query_batches = self.query_embed.weight.view(1, 1, *self.query_embed.weight.shape).repeat(*agent_batch.shape[:2], 1, 1)
-            #print("self.query_batches.shape", self.query_batches.shape, "agents.shape:", agents.shape,"agents.unsqueeze(0).unsqueeze(2)", agents.unsqueeze(0).unsqueeze(2).shape)
-            #print("agents_input.shape:", agents_input.shape)
             agent_batch_input = agent_batch.unsqueeze(2)
-            #print("agent_batch.shape, self.query_batches.shape",agent_batch.shape, self.query_batches.shape)
+            #print("agent_batch_input.shape", agent_batch_input.shape)
             hist_out = self.hist_tf(agent_batch_input, self.query_batches, None, None)
-            #print("hist_out.shape: ", hist_out.shape)
-            #lane_mask = torch.ones(1, 1, neighbor_num).to(device)
-            #print("lanes.unsqueeze(0)", lanes.unsqueeze(0).shape, "lane_mask.shape", lane_mask.shape)
-            #print()
             lane_mem = self.lane_enc(self.lane_emb(lane_batch), lane_mask)
-            #print("lane_mem.shape: ", lane_mem.shape)
-            #print(error)
             lane_mem = lane_mem.unsqueeze(1).repeat(1, social_num, 1, 1)
             lane_mask = lane_mask.unsqueeze(1).repeat(1, social_num, 1, 1)
-            #print("lane_mem.shape: ", lane_mem.shape)
-            #print("lane_mask.shape: ", lane_mask.shape)
-            # Lane decoder
-
             lane_out = self.lane_dec(hist_out, lane_mem, lane_mask, None)
-            #print("lane_out.shape: ", lane_out.shape)
-
             dist = lane_out.view(batch_size, social_num, -1)
             dist = self.dist_emb(dist)
-            #print("dist.shape", dist.shape)
-            # Social layer
-            #print(agent_batch.shape, dist.shape)
             social_inp = self.fusion2(torch.cat([agent_batch, dist], -1))
             social_mem = self.social_enc(social_inp, agent_mask)
             social_out = social_mem.unsqueeze(
                 dim=2).repeat(1, 1, self.num_queries, 1)
-            #print("social_out.shape", social_out.shape)
             out = torch.cat([social_out, lane_out], -1)
-            #print("out.shape", out.shape) #out.shape torch.Size([1, 44, 50, 256])
-            # Prediction head
-            outputs_coord, outputs_class = self.prediction_header(out)
-            #lanes = lanes_out_tbd
-
-            #print("outputs_coord.shape", outputs_coord.shape) #outputs_coord.shape torch.Size([1, 44, 50, 2])
-            #print("outputs_class.shape", outputs_class.shape) #outputs_class.shape torch.Size([1, 44, 50])
-
+            outputs_coord, outputs_class, outputs_centerness = self.prediction_header(out)
             outputs_coord_feature = self.out_pos_emb(outputs_coord)
             out = torch.cat([out, outputs_coord_feature], -1)
             outputs_traj = self.generator_header(out)
-            #print("outputs_coord.shape", outputs_coord.shape)
-            #print("outputs_traj", outputs_traj[:,:,:,-1,:].shape)
             outputs_traj[:,:,:,-1,:] = outputs_coord
-            #element_states_batch[i] = torch.cat([agents, lanes])
-            #outputs_coord_batch.append(outputs_coord.squeeze(0))
-            #outputs_class_batch.append(outputs_class.squeeze(0))
-            #outputs_traj_batch.append(outputs_traj.squeeze(0))
-        return outputs_coord, outputs_class, outputs_traj
+        return outputs_coord, outputs_class, outputs_traj, outputs_centerness
 
     # @profile
     def forward(self, mapping: List[Dict], device):
         import time
-        global starttime
         starttime = time.time()
         #print("MAPPING")
         #print(mapping)
@@ -348,11 +315,14 @@ class VectorNet(nn.Module):
         if args.argoverse:
             utils.batch_init(mapping)
 
-        outputs_coord_batch, outputs_class_batch, outputs_traj_batch = self.forward_encode_sub_graph(mapping, matrix, polyline_spans, device, batch_size)
+        outputs_coord_batch, outputs_class_batch, outputs_traj_batch, outputs_centerness_batch = self.forward_encode_sub_graph(mapping, matrix, polyline_spans, device, batch_size)
         outputs_coord, coord_length = utils.merge_tensors_coor(outputs_coord_batch,hidden_size0=50, hidden_size1=2, device=device)
         outputs_class, class_length = utils.merge_tensors_class(outputs_class_batch,hidden_size0=50, device=device)
         outputs_traj, traj_length = utils.merge_tensors_traj(outputs_traj_batch, hidden_size0=50, hidden_size1=30, hidden_size2=2, device=device)
-        output = self.decoder(mapping, batch_size, outputs_coord, outputs_class, outputs_traj, coord_length, device=device)
-
+        outputs_centerness, centerness_length = utils.merge_tensors_class(outputs_centerness_batch,hidden_size0=50, device=device)
+        middletime = time.time()
+        output = self.decoder(mapping, batch_size, outputs_coord, outputs_class, outputs_traj, outputs_centerness, coord_length, device=device)
+        endtime = time.time()
+        #print("time:",(middletime-starttime), (endtime-middletime))
 
         return output

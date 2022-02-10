@@ -30,7 +30,7 @@ def compile_pyx_files():
 compile_pyx_files()
 
 import utils, structs
-from modeling.vectornet_fast import VectorNet
+from modeling.vectornet_centerness_dis import VectorNet
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
@@ -50,7 +50,7 @@ def learning_rate_decay(args, i_epoch, optimizer, optimizer_2=None):
 
     if i_epoch > 0 and i_epoch % 20 == 0:
         for p in optimizer.param_groups:
-            p['lr'] *= 0.1
+            p['lr'] *= 0.3
 """
 def learning_rate_decay(args, i_epoch, optimizer, optimizer_2=None):
     utils.i_epoch = i_epoch

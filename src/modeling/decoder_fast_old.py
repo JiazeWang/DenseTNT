@@ -98,7 +98,7 @@ class Decoder_predict(nn.Module):
             positive_points_class = torch.ones(self.positive_num).to(device)
             negative_points_class = torch.zeros(self.negative_num).to(device)
             gt_points = torch.from_numpy(gt_points).to(device)
-            loss_i, DE_i = self.SetCriterion(positive_points, positive_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i, device)
+            loss_i, DE_i = self.SetCriterion(positive_points, positive_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i)
             loss[i] = loss_i
             DE[i][-1] = DE_i
 
@@ -155,27 +155,9 @@ class SetCriterion(nn.Module):
         self.class_loss_w = 1
         self.negative_points_num = 40
 
-    def distance_loss(self, gt_point, coord_i):
-
-        #print(gt_point.shape, coord_i.shape)
-
-        batch_size = coord_i.shape[0]
-        loss = torch.zeros([batch_size, 1])
-        for i in range(0, batch_size):
-            distance = torch.sqrt((gt_point[0] - coord_i[i][0]) ** 2 + (gt_point[1] - coord_i[i][1]) ** 2)
-            if distance >=4:
-                distance_error_i = 1
-            else:
-                distance_error_i = distance/4
-            #print(i, loss[i].shape)
-            loss[i] = distance_error_i
-        #print("loss_now", loss)
-        return loss
-
-    def forward(self, total_points, total_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i, device):
+    def forward(self, total_points, total_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i):
         #print("loss: ", total_points.shape, total_points_class.shape, coord_i.shape, class_i.shape, traj_i.shape)
 
-        distance_loss = self.distance_loss(total_points[0], coord_i).to(device)
 
         indices = self.matcher(total_points, total_points_class, coord_i, class_i)
         predict_indices = indices[0][0]
@@ -184,10 +166,6 @@ class SetCriterion(nn.Module):
         predict_points = torch.stack([coord_i[i] for i in predict_indices])
         predict_class = torch.stack([class_i[i] for i in predict_indices])
         predict_traj = torch.stack([traj_i[i] for i in predict_indices])
-
-        distance_loss = torch.sum(torch.stack([distance_loss[i] for i in predict_indices]))
-
-        #print(distance_loss.shape)
 
         target_point = torch.stack([total_points[i] for i in target_indices])
         target_class = torch.stack([total_points_class[i] for i in target_indices])
@@ -213,7 +191,7 @@ class SetCriterion(nn.Module):
         #   predict_class = torch.stack([class_i[i] for i if i is not in predict_indices])
         #print(predict_class.shape)
         class_loss = F.binary_cross_entropy(predict_class.float(), target_class.float())
-        total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*(class_loss + negative_class_loss) + distance_loss
+        total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*(class_loss + negative_class_loss)
         index = torch.argmax(class_i).item()
         DE = torch.sqrt((coord_i[index][0] - gt_points[-1][0]) ** 2 + (coord_i[index][1] - gt_points[-1][1]) ** 2)
         #print("DE", DE)

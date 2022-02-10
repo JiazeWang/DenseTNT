@@ -67,7 +67,7 @@ def add_argument(parser):
                         type=float,
                         help="The weight decay rate for Adam.")
     parser.add_argument("--num_train_epochs",
-                        default=50.0,
+                        default=60.0,
                         type=float,
                         help="Total number of training epochs to perform.")
     parser.add_argument('--seed',
@@ -273,7 +273,7 @@ def init(args_: Args, logger_):
 
     if not args.do_eval and not args.debug and os.path.exists(args.output_dir):
         print('{} {} exists'.format(get_color_text('Warning!'), args.output_dir))
-        input()
+        #input()
 
     if args.do_eval:
         assert os.path.exists(args.output_dir)
@@ -1830,6 +1830,13 @@ def get_neighbour_points_positive(point, num = 25, neighbour_dis=2):
     points.append(point)
     for i in range(0, num-1):
         points.append([point[0]+(random.random()-0.5)*2*neighbour_dis, point[1]+(random.random()-0.5)*2*neighbour_dis])
+    return points
+
+def get_neighbour_points_positive_same(point, num = 25, neighbour_dis=2):
+    # grid = np.zeros([300, 300], dtype=int)
+    points = []
+    for i in range(0, num):
+        points.append(point)
     return points
 
 
