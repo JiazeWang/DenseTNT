@@ -5,7 +5,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn, Tensor
 import copy
-from modeling.decoder_centerness import Decoder_predict
+from modeling.decoder_centerness_NEW import Decoder_predict
 #from modeling.decoder_centerness_dis import Decoder_predict
 from modeling.lib import MLP, GlobalGraph, LayerNorm, SubGraph, CrossAttention, GlobalGraphRes
 import utils
