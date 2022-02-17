@@ -133,10 +133,12 @@ class SetCriterion(nn.Module):
         indices = torch.argmin(distance_loss)
         predict_class = class_i[indices].reshape([1])
         predict_traj = traj_i[indices]
+        predict_point = coord_i[indices]
         points_class = torch.ones(1).to(device)
         class_loss = F.binary_cross_entropy(predict_class.float(), points_class.float())
         traj_loss = F.smooth_l1_loss(predict_traj.float(), gt_points.float())
-        total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*class_loss
+        point_loss = F.smooth_l1_loss(predict_points.float(), target_point.float())
+        total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*class_loss + points_class
 
         index = torch.argmax(class_i).item()
         DE = torch.sqrt((coord_i[index][0] - gt_points[-1][0]) ** 2 + (coord_i[index][1] - gt_points[-1][1]) ** 2)
