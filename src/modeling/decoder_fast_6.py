@@ -69,6 +69,9 @@ class Decoder_predict(nn.Module):
             gt_points = labels[i].reshape([self.future_frame_num, 2])
             target_point = gt_points[-1]
             gt_points = torch.from_numpy(gt_points).to(device)
+            coord_i = outputs_coord[i][0]
+            class_i = outputs_class[i][0]
+            traj_i = outputs_traj[i][0]
             loss_i, DE_i = self.SetCriterion(gt_points, target_point, coord_i, class_i, traj_i, device)
             loss[i] = loss_i
             DE[i][-1] = DE_i
