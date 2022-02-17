@@ -137,6 +137,7 @@ class SetCriterion(nn.Module):
         points_class = torch.ones(1).to(device)
         class_loss = F.binary_cross_entropy(predict_class.float(), points_class.float())
         traj_loss = F.smooth_l1_loss(predict_traj.float(), gt_points.float())
+        target_point = torch.from_numpy(target_point).to(device)
         point_loss = F.smooth_l1_loss(predict_points.float(), target_point.float())
         total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*class_loss + points_class
 
