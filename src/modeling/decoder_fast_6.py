@@ -136,6 +136,8 @@ class SetCriterion(nn.Module):
         predict_class = class_i[indices]
         predict_traj = traj_i[indices]
         points_class = torch.ones(1).to(device)
+        print("predict_class.shape", predict_class.shape)
+        print("points_class.shape", points_class.shape)
         class_loss = F.binary_cross_entropy(predict_class.float(), points_class.float())
         traj_loss = F.smooth_l1_loss(predict_traj.float(), gt_points.float())
         total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*class_loss
