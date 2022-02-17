@@ -349,9 +349,9 @@ class VectorNet(nn.Module):
             utils.batch_init(mapping)
 
         outputs_coord_batch, outputs_class_batch, outputs_traj_batch = self.forward_encode_sub_graph(mapping, matrix, polyline_spans, device, batch_size)
-        outputs_coord, coord_length = utils.merge_tensors_coor(outputs_coord_batch,hidden_size0=50, hidden_size1=2, device=device)
-        outputs_class, class_length = utils.merge_tensors_class(outputs_class_batch,hidden_size0=50, device=device)
-        outputs_traj, traj_length = utils.merge_tensors_traj(outputs_traj_batch, hidden_size0=50, hidden_size1=30, hidden_size2=2, device=device)
+        outputs_coord, coord_length = utils.merge_tensors_coor(outputs_coord_batch,hidden_size0=6, hidden_size1=2, device=device)
+        outputs_class, class_length = utils.merge_tensors_class(outputs_class_batch,hidden_size0=6, device=device)
+        outputs_traj, traj_length = utils.merge_tensors_traj(outputs_traj_batch, hidden_size0=6, hidden_size1=30, hidden_size2=2, device=device)
         output = self.decoder(mapping, batch_size, outputs_coord, outputs_class, outputs_traj, coord_length, device=device)
 
 
