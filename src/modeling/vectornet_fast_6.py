@@ -14,7 +14,7 @@ from modeling.TF_utils import (Decoder, DecoderLayer, Encoder, EncoderDecoder,
                         EncoderLayer, GeneratorWithParallelHeads626,
                         LinearEmbedding, MultiHeadAttention,
                         PointerwiseFeedforward, PositionalEncoding, EncoderLayer_NEW,
-                        SublayerConnection, Generator_full)
+                        SublayerConnection, Generator_full, GeneratorWithParallelHeads626_softmax)
 
 class NewSubGraph(nn.Module):
 
@@ -170,7 +170,7 @@ class VectorNet(nn.Module):
             nn.ReLU(),
             nn.Linear(pos_dim, pos_dim, bias=True))
 
-        self.prediction_header = GeneratorWithParallelHeads626(d_model*2, dec_out_size, dropout)
+        self.prediction_header = GeneratorWithParallelHeads626_softmax(d_model*2, dec_out_size, dropout)
 
         self.generator_header = Generator_full(d_model*3, 60, dropout)
 
