@@ -133,7 +133,7 @@ class SetCriterion(nn.Module):
         indices = torch.argmin(distance_loss)
         predict_class = class_i[indices].reshape([1])
         predict_traj = traj_i[indices]
-        predict_point = coord_i[indices]
+        predict_points = coord_i[indices]
         points_class = torch.ones(1).to(device)
         class_loss = F.binary_cross_entropy(predict_class.float(), points_class.float())
         traj_loss = F.smooth_l1_loss(predict_traj.float(), gt_points.float())
