@@ -124,6 +124,47 @@ class Decoder(nn.Module):
         return x
 
 
+class GeneratorWithParallelHeads_centerness_softmax(nn.Module):
+    def __init__(self, d_model, out_size, dropout, reg_h_dim=128, dis_h_dim=128, cls_h_dim=128):
+        super(GeneratorWithParallelHeads_centerness_softmax, self).__init__()
+        self.reg_mlp = nn.Sequential(
+            nn.Linear(d_model, reg_h_dim*2, bias=True),
+            nn.LayerNorm(reg_h_dim*2),
+            nn.ReLU(),
+            nn.Linear(reg_h_dim*2, reg_h_dim, bias=True),
+            nn.Linear(reg_h_dim, out_size, bias=True))
+        self.dis_emb = nn.Linear(2, dis_h_dim, bias=True)
+        self.cls_FFN = PointerwiseFeedforward(
+            d_model, 2*d_model, dropout=dropout)
+        self.classification_layer = nn.Sequential(
+            nn.Linear(d_model, cls_h_dim),
+            nn.Linear(cls_h_dim, 1, bias=True))
+        self.cls_opt = nn.Softmax(dim=-1)
+
+        self.centerness_FFN = PointerwiseFeedforward(
+            d_model, 2*d_model, dropout=dropout)
+        self.centerness_layer = nn.Sequential(
+            nn.Linear(d_model, cls_h_dim),
+            nn.Linear(cls_h_dim, 1, bias=True))
+        self.centerness_opt = nn.Sigmoid()
+
+
+    def forward(self, x):
+        #print("input_x.shape: ", x.shape)
+        pred = self.reg_mlp(x)
+        #pred = pred.view(*pred.shape[0:3], -1, 2).cumsum(dim=-2)
+        # return pred
+        #print("pred.shape", pred.shape)
+        cls_h = self.cls_FFN(x)
+        cls_h = self.classification_layer(cls_h).squeeze(dim=-1)
+        conf = self.cls_opt(cls_h)
+
+        centerness_h = self.centerness_FFN(x)
+        centerness_h = self.centerness_layer(centerness_h).squeeze(dim=-1)
+        centerness = self.centerness_opt(centerness_h)
+        #print("conf.shape", conf.shape)
+        return pred, conf, centerness
+
 
 class GeneratorWithParallelHeads_centerness(nn.Module):
     def __init__(self, d_model, out_size, dropout, reg_h_dim=128, dis_h_dim=128, cls_h_dim=128):

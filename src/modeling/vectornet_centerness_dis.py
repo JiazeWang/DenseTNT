@@ -6,14 +6,14 @@ import torch.nn.functional as F
 from torch import nn, Tensor
 import copy
 #from modeling.decoder_centerness import Decoder_predict
-from modeling.decoder_centerness_dis_one import Decoder_predict
+from modeling.decoder_centerness_dis import Decoder_predict
 from modeling.lib import MLP, GlobalGraph, LayerNorm, SubGraph, CrossAttention, GlobalGraphRes
 import utils
 from modeling.TF_utils import (Decoder, DecoderLayer, Encoder, EncoderDecoder,
                         EncoderLayer, GeneratorWithParallelHeads_centerness,
                         LinearEmbedding, MultiHeadAttention,
                         PointerwiseFeedforward, PositionalEncoding, EncoderLayer_NEW,
-                        SublayerConnection, Generator_full)
+                        SublayerConnection, Generator_full, GeneratorWithParallelHeads_centerness_softmax)
 
 class NewSubGraph(nn.Module):
 
@@ -169,7 +169,7 @@ class VectorNet(nn.Module):
             nn.ReLU(),
             nn.Linear(pos_dim, pos_dim, bias=True))
 
-        self.prediction_header = GeneratorWithParallelHeads_centerness(d_model*2, dec_out_size, dropout)
+        self.prediction_header = GeneratorWithParallelHeads_centerness_softmax(d_model*2, dec_out_size, dropout)
 
         self.generator_header = Generator_full(d_model*3, 60, dropout)
 

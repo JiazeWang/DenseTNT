@@ -52,7 +52,7 @@ class Decoder_predict(nn.Module):
         self.positive_num = 10
         self.negative_num = 50 - self.positive_num
         self.SetCriterion = SetCriterion()
-        self.nms_threshold = 2
+        self.nms_threshold = 0
         self.eval_num = 6
 
     def forward(self, mapping, batch_size, outputs_coord, outputs_class, outputs_traj, coord_length, device):
@@ -66,18 +66,19 @@ class Decoder_predict(nn.Module):
         pred_trajs_batch = np.zeros([batch_size, self.eval_num, self.future_frame_num, 2])
         pred_probs_batch = np.zeros([batch_size, self.eval_num])
         for i in range(batch_size):
-            gt_points = labels[i].reshape([self.future_frame_num, 2])
-            target_point = gt_points[-1]
-            gt_points = torch.from_numpy(gt_points).to(device)
-            coord_i = outputs_coord[i][0]
-            class_i = outputs_class[i][0]
-            traj_i = outputs_traj[i][0]
-            loss_i, DE_i = self.SetCriterion(gt_points, target_point, coord_i, class_i, traj_i, device)
-            loss[i] = loss_i
-            DE[i][-1] = DE_i
+            if self.training:
+                gt_points = labels[i].reshape([self.future_frame_num, 2])
+                target_point = gt_points[-1]
+                gt_points = torch.from_numpy(gt_points).to(device)
+                coord_i = outputs_coord[i][0]
+                class_i = outputs_class[i][0]
+                traj_i = outputs_traj[i][0]
+                loss_i, DE_i = self.SetCriterion(gt_points, target_point, coord_i, class_i, traj_i, device)
+                loss[i] = loss_i
+                DE[i][-1] = DE_i
 
-            #print("class_i", class_i)
-            index = torch.argmax(class_i).item()
+                #print("class_i", class_i)
+                index = torch.argmax(class_i).item()
             #print(index, coord_i[index], class_i[index], class_i.max())
             if not self.training:
                 coord_i = coord_i.cpu().detach().numpy()
