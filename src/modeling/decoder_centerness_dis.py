@@ -183,6 +183,7 @@ class SetCriterion(nn.Module):
         predict_indices = indices[0][0]
         target_indices = indices[0][1]
         print("predict_indices", predict_indices)
+        print("target_indices", target_indices)
         predict_points = torch.stack([coord_i[i] for i in predict_indices])
         predict_class = torch.stack([class_i[i] for i in predict_indices])
         predict_traj = torch.stack([traj_i[i] for i in predict_indices])
