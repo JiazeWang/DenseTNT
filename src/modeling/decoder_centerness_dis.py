@@ -115,7 +115,7 @@ class Decoder_predict(nn.Module):
                 positive_points = torch.from_numpy(np.array(positive_points)).to(device)
                 negative_points = torch.from_numpy(np.array(negative_points)).to(device)
                 total_points = torch.cat([positive_points, negative_points], dim=0)
-                total_points_class = torch.cat([torch.ones(self.positive_num), torch.zeros(self.negative_num)])
+                total_points_class = torch.cat([torch.ones(self.positive_num), torch.zeros(self.negative_num)]).to(device)
                 #print(positive_points.shape, negative_points.shape, total_points.shape)
                 coord_i = outputs_coord[i][0]
                 class_i = outputs_class[i][0]
