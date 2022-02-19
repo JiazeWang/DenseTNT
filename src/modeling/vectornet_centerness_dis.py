@@ -13,7 +13,7 @@ from modeling.TF_utils import (Decoder, DecoderLayer, Encoder, EncoderDecoder,
                         EncoderLayer, GeneratorWithParallelHeads_centerness,
                         LinearEmbedding, MultiHeadAttention,
                         PointerwiseFeedforward, PositionalEncoding, EncoderLayer_NEW,
-                        SublayerConnection, Generator_full, GeneratorWithParallelHeads_centerness_softmax)
+                        SublayerConnection, Generator_full, Generator_centerness)
 
 class NewSubGraph(nn.Module):
 
@@ -169,11 +169,11 @@ class VectorNet(nn.Module):
             nn.ReLU(),
             nn.Linear(pos_dim, pos_dim, bias=True))
 
-        self.prediction_header = GeneratorWithParallelHeads_centerness_softmax(d_model*2, dec_out_size, dropout)
+        self.prediction_header = GeneratorWithParallelHeads626_softmax(d_model*2, dec_out_size, dropout)
 
         self.generator_header = Generator_full(d_model*3, 60, dropout)
 
-
+        self.generator_centerness = Generator_centerness(d_model*3, 1, dropout)
     def preprocess_traj(self, traj, device):
         '''
             Generate the trajectory mask for all agents (including target agent)
@@ -293,11 +293,12 @@ class VectorNet(nn.Module):
             social_out = social_mem.unsqueeze(
                 dim=2).repeat(1, 1, self.num_queries, 1)
             out = torch.cat([social_out, lane_out], -1)
-            outputs_coord, outputs_class, outputs_centerness = self.prediction_header(out)
+            outputs_coord, outputs_class = self.prediction_header(out)
             outputs_coord_feature = self.out_pos_emb(outputs_coord)
             out = torch.cat([out, outputs_coord_feature], -1)
             outputs_traj = self.generator_header(out)
             outputs_traj[:,:,:,-1,:] = outputs_coord
+            outputs_centerness = self.generator_centerness(out)
         return outputs_coord, outputs_class, outputs_traj, outputs_centerness
 
     # @profile

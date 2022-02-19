@@ -445,6 +445,25 @@ class Generator_full(nn.Module):
             nn.ReLU(),
             nn.Linear(reg_h_dim*2, reg_h_dim, bias=True),
             nn.Linear(reg_h_dim, out_size, bias=True))
+        self.cls_opt = nn.Sigmoid()
+    def forward(self, x):
+        #print("input_x.shape: ", x.shape)
+        pred = self.reg_mlp(x)
+        pred = self.cls_opt(pred)
+        # return pred
+        return pred
+
+
+
+class Generator_centerness(nn.Module):
+    def __init__(self, d_model, out_size, dropout, reg_h_dim=128, dis_h_dim=128, cls_h_dim=128):
+        super(Generator_centerness, self).__init__()
+        self.reg_mlp = nn.Sequential(
+            nn.Linear(d_model, reg_h_dim*2, bias=True),
+            nn.LayerNorm(reg_h_dim*2),
+            nn.ReLU(),
+            nn.Linear(reg_h_dim*2, reg_h_dim, bias=True),
+            nn.Linear(reg_h_dim, out_size, bias=True))
 
     def forward(self, x):
         #print("input_x.shape: ", x.shape)
@@ -452,7 +471,6 @@ class Generator_full(nn.Module):
         pred = pred.view(*pred.shape[0:3], -1, 2).cumsum(dim=-2)
         # return pred
         return pred
-
 
 class GeneratorWithParallelHeads(nn.Module):
     def __init__(self, d_model, out_size, dropout, reg_h_dim=128, region_proposal_num=6):
