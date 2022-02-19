@@ -182,8 +182,8 @@ class SetCriterion(nn.Module):
         indices = self.matcher(total_points, total_points_class, coord_i, class_i)
         predict_indices = indices[0][0]
         target_indices = indices[0][1]
-        print("predict_indices", predict_indices)
-        print("target_indices", target_indices)
+        #print("predict_indices", predict_indices)
+        #print("target_indices", target_indices)
         predict_points = torch.stack([coord_i[i] for i in predict_indices])
         predict_class = torch.stack([class_i[i] for i in predict_indices])
         predict_traj = torch.stack([traj_i[i] for i in predict_indices])
@@ -211,7 +211,7 @@ class SetCriterion(nn.Module):
             if i <=5:
                 predict_indices.append(num)
             num = num + 1
-        print("predict_indices:", predict_indices)
+        #print("predict_indices:", predict_indices)
         positive_traj = torch.stack([traj_i[i] for i in predict_indices])
         target_traj = gt_points.unsqueeze(0).repeat(self.positive_points_num, 1, 1).squeeze(0)
         traj_loss = F.smooth_l1_loss(positive_traj.float(), target_traj.float())
