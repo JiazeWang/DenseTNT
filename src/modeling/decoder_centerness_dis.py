@@ -197,7 +197,6 @@ class SetCriterion(nn.Module):
         centerness_loss = F.binary_cross_entropy(predict_centerness.float(), target_centerness.squeeze().float())
         #print("centerness_loss:", centerness_loss)
 
-        target_traj = gt_points.unsqueeze(0).repeat(self.positive_points_num, 1, 1).squeeze(0)
 
         #v2 loss added
         target_point = total_points
@@ -205,9 +204,20 @@ class SetCriterion(nn.Module):
         #print(target_traj.shape, predict_traj.shape)
 
         total_shape = coord_i.shape[0]
-        traj_loss = F.smooth_l1_loss(predict_traj.float(), target_traj.float())
+        total_list = [i for i in range(0, total_shape)]
+        predict_indices = []
+        num = 0
+        for i in target_indices:
+            if i <=5:
+                predict_indices.append(num)
+            num = num + 1
+        print("predict_indices:", predict_indices)
+        positive_traj = torch.stack([traj_i[i] for i in predict_indices])
+        target_traj = gt_points.unsqueeze(0).repeat(self.positive_points_num, 1, 1).squeeze(0)
+        traj_loss = F.smooth_l1_loss(positive_traj.float(), target_traj.float())
         class_loss = F.binary_cross_entropy(predict_class.float(), target_class.float())
         total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*class_loss + point_loss + centerness_loss
+        #print("class_i", class_i.shape, centerness_i.shape)
         class_i = class_i.mul(centerness_i)
         index = torch.argmax(class_i).item()
         DE = torch.sqrt((coord_i[index][0] - gt_points[-1][0]) ** 2 + (coord_i[index][1] - gt_points[-1][1]) ** 2)
