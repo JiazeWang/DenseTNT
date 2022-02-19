@@ -13,7 +13,7 @@ from modeling.TF_utils import (Decoder, DecoderLayer, Encoder, EncoderDecoder,
                         EncoderLayer, GeneratorWithParallelHeads_centerness,
                         LinearEmbedding, MultiHeadAttention,
                         PointerwiseFeedforward, PositionalEncoding, EncoderLayer_NEW,
-                        SublayerConnection, Generator_full, Generator_centerness, GeneratorWithParallelHeads626_softmax)
+                        SublayerConnection, Generator_traj, Generator_centerness, GeneratorWithParallelHeads626_softmax)
 
 class NewSubGraph(nn.Module):
 
@@ -171,7 +171,7 @@ class VectorNet(nn.Module):
 
         self.prediction_header = GeneratorWithParallelHeads626_softmax(d_model*2, dec_out_size, dropout)
 
-        self.generator_header = Generator_full(d_model*3, 60, dropout)
+        self.generator_header = Generator_traj(d_model*3, 60, dropout)
 
         self.generator_centerness = Generator_centerness(d_model*3, 1, dropout)
     def preprocess_traj(self, traj, device):

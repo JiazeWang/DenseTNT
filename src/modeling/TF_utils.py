@@ -436,9 +436,9 @@ class GeneratorWithParallelHeads626_softmax(nn.Module):
         return pred, conf
 
 
-class Generator_full(nn.Module):
+class Generator_centerness(nn.Module):
     def __init__(self, d_model, out_size, dropout, reg_h_dim=128, dis_h_dim=128, cls_h_dim=128):
-        super(Generator_full, self).__init__()
+        super(Generator_centerness, self).__init__()
         self.reg_mlp = nn.Sequential(
             nn.Linear(d_model, reg_h_dim*2, bias=True),
             nn.LayerNorm(reg_h_dim*2),
@@ -455,9 +455,9 @@ class Generator_full(nn.Module):
 
 
 
-class Generator_centerness(nn.Module):
+class Generator_traj(nn.Module):
     def __init__(self, d_model, out_size, dropout, reg_h_dim=128, dis_h_dim=128, cls_h_dim=128):
-        super(Generator_centerness, self).__init__()
+        super(Generator_traj, self).__init__()
         self.reg_mlp = nn.Sequential(
             nn.Linear(d_model, reg_h_dim*2, bias=True),
             nn.LayerNorm(reg_h_dim*2),
