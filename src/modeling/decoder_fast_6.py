@@ -81,6 +81,9 @@ class Decoder_predict(nn.Module):
                 index = torch.argmax(class_i).item()
             #print(index, coord_i[index], class_i[index], class_i.max())
             if not self.training:
+                coord_i = outputs_coord[i][0]
+                class_i = outputs_class[i][0]
+                traj_i = outputs_traj[i][0]
                 coord_i = coord_i.cpu().detach().numpy()
                 class_i = class_i.cpu().detach().numpy()
                 traj_i = traj_i.cpu().detach().numpy()
