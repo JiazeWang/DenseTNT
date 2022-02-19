@@ -300,7 +300,7 @@ class VectorNet(nn.Module):
             print("outputs_traj:", outputs_traj.shape)
             print("outputs_coord:", outputs_coord.shape)
             outputs_traj[:,:,:,-1,:] = outputs_coord
-            outputs_centerness = self.generator_centerness(out).unsqueeze(-1)
+            outputs_centerness = self.generator_centerness(out).squeeze(-1)
         return outputs_coord, outputs_class, outputs_traj, outputs_centerness
 
     # @profile
