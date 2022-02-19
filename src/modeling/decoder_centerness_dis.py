@@ -188,7 +188,6 @@ class SetCriterion(nn.Module):
         predict_class = torch.stack([class_i[i] for i in predict_indices])
         predict_traj = torch.stack([traj_i[i] for i in predict_indices])
         predict_centerness = torch.stack([centerness_i[i] for i in predict_indices])
-        #print("predict_centerness.shape", predict_centerness.shape)
         target_class = torch.stack([total_points_class[i] for i in target_indices])
         target_centerness = torch.stack([centerness_gt[i] for i in target_indices])
         #print("target_centerness.shape", target_centerness.shape)
