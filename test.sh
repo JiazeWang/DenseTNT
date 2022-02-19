@@ -1,4 +1,4 @@
-OUTPUT_DIR=centerness_branch_add/test; \
+OUTPUT_DIR=output_train_6_softmax/test; \
 GPU_NUM=1; \
 CUDA_VISIBLE_DEVICES=0 python src/run.py --argoverse --future_frame_num 30 \
   --do_train --data_dir train/data/ --output_dir ${OUTPUT_DIR} \
@@ -9,6 +9,6 @@ CUDA_VISIBLE_DEVICES=0 python src/run.py --argoverse --future_frame_num 30 \
     goals_2D enhance_global_graph subdivide lazy_points new laneGCN point_sub_graph \
     stage_one stage_one_dynamic=0.95 laneGCN-4 point_level point_level-4 \
     point_level-4-3 complete_traj complete_traj-3 \
-  --model_recover_path centerness_branch_add/model_save/model.60.bin \
+  --model_recover_path output_train_6_softmax/model_save/model.60.bin \
   --reuse_temp_file --temp_file_dir output \
   --do_eval --eval_batch_size 16
