@@ -13,7 +13,7 @@ from modeling.TF_utils import (Decoder, DecoderLayer, Encoder, EncoderDecoder,
                         EncoderLayer, GeneratorWithParallelHeads_centerness,
                         LinearEmbedding, MultiHeadAttention,
                         PointerwiseFeedforward, PositionalEncoding, EncoderLayer_NEW,
-                        SublayerConnection, Generator_full, Generator_centerness)
+                        SublayerConnection, Generator_full, Generator_centerness, GeneratorWithParallelHeads626_softmax)
 
 class NewSubGraph(nn.Module):
 
