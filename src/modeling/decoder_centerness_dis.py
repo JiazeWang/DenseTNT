@@ -44,7 +44,7 @@ class Decoder_predict(nn.Module):
         global args
         args = args_
         hidden_size = args.hidden_size
-        self.neighbour_dis = args.neighbour_dis
+        self.neighbour_dis = 2
         #self.neighbour_dis = 1
         self.future_frame_num = args.future_frame_num
         self.mode_num = args.mode_num
@@ -132,18 +132,6 @@ class Decoder_predict(nn.Module):
 
             return loss.mean(), DE, None
 
-            #print("class_i", class_i)
-            #index = torch.argmax(class_i).item()
-            #print(index, coord_i[index], class_i[index], class_i.max())
-
-                #for each in predict_trajs:
-                #    utils.to_origin_coordinate(each, i)
-                #    pred_trajs_batch.append(predict_trajs)
-        #print(loss.mean())
-        #if self.training:
-        #    return loss.mean(), DE, None
-        #else:
-        #    return pred_trajs_batch, pred_probs_batch, None
 
 
 
@@ -194,7 +182,7 @@ class SetCriterion(nn.Module):
         indices = self.matcher(total_points, total_points_class, coord_i, class_i)
         predict_indices = indices[0][0]
         target_indices = indices[0][1]
-        #print("predict_indices", predict_indices.shape)
+        print("predict_indices", predict_indices)
         predict_points = torch.stack([coord_i[i] for i in predict_indices])
         predict_class = torch.stack([class_i[i] for i in predict_indices])
         predict_traj = torch.stack([traj_i[i] for i in predict_indices])
