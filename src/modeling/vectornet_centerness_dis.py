@@ -297,6 +297,8 @@ class VectorNet(nn.Module):
             outputs_coord_feature = self.out_pos_emb(outputs_coord)
             out = torch.cat([out, outputs_coord_feature], -1)
             outputs_traj = self.generator_header(out)
+            print("outputs_traj:", outputs_traj.shape)
+            print("outputs_coord:", outputs_coord.shape)
             outputs_traj[:,:,:,-1,:] = outputs_coord
             outputs_centerness = self.generator_centerness(out)
         return outputs_coord, outputs_class, outputs_traj, outputs_centerness
