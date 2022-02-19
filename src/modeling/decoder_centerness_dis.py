@@ -200,24 +200,14 @@ class SetCriterion(nn.Module):
         target_traj = gt_points.unsqueeze(0).repeat(self.positive_points_num, 1, 1).squeeze(0)
 
         #v2 loss added
-        target_point = total_points[0].unsqueeze(0).repeat(self.positive_points_num, 1)
+        target_point = total_points
         point_loss = F.smooth_l1_loss(predict_points.float(), target_point.float())
         #print(target_traj.shape, predict_traj.shape)
 
         total_shape = coord_i.shape[0]
-        total_list = [i for i in range(0, total_shape)]
-        negative_indices = []
-
-        for i in total_list:
-            if i not in predict_indices:
-                negative_indices.append(i)
-        negative_predict_class = torch.stack([class_i[i] for i in negative_indices])
-        negative_class_loss = F.binary_cross_entropy(negative_predict_class.float(), negative_points_class.float())
-
         traj_loss = F.smooth_l1_loss(predict_traj.float(), target_traj.float())
         class_loss = F.binary_cross_entropy(predict_class.float(), target_class.float())
-        total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*(class_loss + negative_class_loss) + point_loss + centerness_loss
-        #print("class_i", class_i.shape, centerness_i.shape)
+        total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*class_loss + point_loss + centerness_loss
         class_i = class_i.mul(centerness_i)
         index = torch.argmax(class_i).item()
         DE = torch.sqrt((coord_i[index][0] - gt_points[-1][0]) ** 2 + (coord_i[index][1] - gt_points[-1][1]) ** 2)
