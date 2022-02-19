@@ -8,7 +8,7 @@ from torch import nn, Tensor
 import structs
 import utils_cython
 from modeling.lib import PointSubGraph, GlobalGraphRes, CrossAttention, GlobalGraph, MLP
-from modeling.matcher import build_matcher
+from modeling.matcher_dis import build_matcher
 import random
 import utils
 
@@ -126,7 +126,7 @@ class Decoder_predict(nn.Module):
                 positive_points_class = torch.ones(self.positive_num).to(device)
                 negative_points_class = torch.zeros(self.negative_num).to(device)
                 gt_points = torch.from_numpy(gt_points).to(device)
-                loss_i, DE_i = self.SetCriterion(positive_points, positive_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i, centerness_i, device)
+                loss_i, DE_i = self.SetCriterion(total_points, total_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i, centerness_i, device)
                 loss[i] = loss_i
                 DE[i][-1] = DE_i
 
