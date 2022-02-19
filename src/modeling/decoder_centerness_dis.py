@@ -8,7 +8,7 @@ from torch import nn, Tensor
 import structs
 import utils_cython
 from modeling.lib import PointSubGraph, GlobalGraphRes, CrossAttention, GlobalGraph, MLP
-from modeling.matcher_dis import build_matcher
+from modeling.matcher import build_matcher
 import random
 import utils
 

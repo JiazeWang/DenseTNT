@@ -19,7 +19,7 @@ class HungarianMatcher(nn.Module):
         """
         super().__init__()
         self.cost_class = cost_class
-        self.cost_bbox = 0
+        self.cost_bbox = cost_bbox
 
     @torch.no_grad()
     def forward(self, total_points, total_points_class, coord_i, class_i):
@@ -46,19 +46,31 @@ class HungarianMatcher(nn.Module):
         # We flatten to compute the cost matrices in a batch
         out_prob = class_i  # [batch_size * num_queries, num_classes]
         out_bbox = coord_i  # [batch_size * num_queries, 4]
+
+        # Also concat the target labels and boxes
+        tgt_ids = total_points_class
         tgt_bbox = total_points
+
+        # Compute the classification cost. Contrary to the loss, we don't use the NLL,
+        # but approximate it in 1 - proba[target class].
+        # The 1 is a constant that doesn't change the matching, it can be ommitted.
+        #cost_class = torch.dist(out_bbox, tgt_bbox, p=1)
+        out_prob = out_prob.unsqueeze(-1)
+        cost_class = (1-out_prob).repeat(1, 6).unsqueeze(0)
+        #print("cost_class.shape", cost_class.shape)
+        #print(cost_class)
+        # Compute the L1 cost between boxes
         out_bbox = out_bbox.unsqueeze(0).to(torch.float32)
         tgt_bbox = tgt_bbox.unsqueeze(0).to(torch.float32)
         cost_bbox = torch.cdist(out_bbox, tgt_bbox, p=1)
-        print("cost_bbox.shape", cost_bbox.shape)
+        #print("cost_bbox.shape", cost_bbox.shape)
         # Final cost matrix
         #print("cost_bbox", cost_bbox.max(), cost_bbox.min())
         #print("cost_class", cost_class.max(), cost_class.min())
-        C = self.cost_bbox * cost_bbox
-        #C = self.cost_bbox * cost_bbox + self.cost_class * cost_class
+        C = self.cost_bbox * cost_bbox + self.cost_class * cost_class
         #print("C.shape", C.shape)
         C = C.view(bs, num_queries, -1).cpu()
-        sizes = 1
+        sizes = 36
         indices = [linear_sum_assignment(c[i]) for i, c in enumerate(C.split(sizes, -1))]
         #print("indices.shape", indices)
         return [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]
