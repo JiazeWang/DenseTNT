@@ -174,6 +174,8 @@ class SetCriterion(nn.Module):
     def forward(self, total_points, total_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i, centerness_i, device):
         #print("loss: ", total_points.shape, total_points_class.shape, coord_i.shape, class_i.shape, traj_i.shape)
         #centerness_gt = self.centerness_gt(total_points[0], coord_i).to(device)
+        target_point = total_points[0]
+        target_point = torch.from_numpy(target_point).to(device)
         centerness_gt, distance_loss = self.distance_loss(target_point, coord_i).to(device)
         indices = torch.argmin(distance_loss)
         predict_class = class_i
@@ -185,8 +187,6 @@ class SetCriterion(nn.Module):
         points_class = torch.ones(6).to(device)
         class_loss = F.binary_cross_entropy(predict_class.float(), points_class.float())
         traj_loss = F.smooth_l1_loss(predict_traj.float(), gt_points.float())
-        target_point = total_points[0]
-        target_point = torch.from_numpy(target_point).to(device)
         target_centerness = centerness_gt.detach()
         centerness_loss = F.binary_cross_entropy(predict_centerness.float(), target_centerness.squeeze().float())
         point_loss = F.smooth_l1_loss(predict_points.float(), target_point.float())
