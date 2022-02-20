@@ -176,7 +176,6 @@ class SetCriterion(nn.Module):
     def forward(self, total_points, total_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i, centerness_i, device):
         #print("loss: ", total_points.shape, total_points_class.shape, coord_i.shape, class_i.shape, traj_i.shape)
 
-        """
         x = total_points[0][0]
         y = total_points[0][1]
         tanxy = y/x
@@ -192,8 +191,7 @@ class SetCriterion(nn.Module):
             category = 4
         else:
             category = 5
-        """
-        category = 5
+
         predict_indices = [6*category + i for i in range(0, 6)]
 
         #print("category:", category, "predict_indices:", predict_indices)
