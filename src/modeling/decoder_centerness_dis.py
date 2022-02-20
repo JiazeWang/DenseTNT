@@ -179,7 +179,7 @@ class SetCriterion(nn.Module):
         #print("loss: ", total_points.shape, total_points_class.shape, coord_i.shape, class_i.shape, traj_i.shape)
 
         centerness_gt = self.centerness_gt(total_points[0], coord_i).to(device)
-        score_gt = F.softmax(-distance_metric(centerness_gt)/self.temper, dim=-1)
+        score_gt = F.softmax(-(centerness_gt)/self.temper, dim=-1)
         print("score_gt:", score_gt)
         indices = self.matcher(total_points, total_points_class, coord_i, class_i)
         predict_indices = indices[0][0]
