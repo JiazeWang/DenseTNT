@@ -159,8 +159,8 @@ class SetCriterion(nn.Module):
 
     def distance_loss(self, gt_point, coord_i):
         batch_size = coord_i.shape[0]
-        centerness = torch.zeros([batch_size, 1])
-        distance_all = torch.zeros([batch_size, 1])
+        centerness = torch.zeros([batch_size, 1]).to(device)
+        distance_all = torch.zeros([batch_size, 1]).to(device)
         for i in range(0, batch_size):
             distance_error_i = torch.sqrt((gt_point[0] - coord_i[i][0]) ** 2 + (gt_point[1] - coord_i[i][1]) ** 2)
             if distance_error_i >=2:
