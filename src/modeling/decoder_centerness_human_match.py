@@ -176,30 +176,36 @@ class SetCriterion(nn.Module):
     def forward(self, total_points, total_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i, centerness_i, device):
         #print("loss: ", total_points.shape, total_points_class.shape, coord_i.shape, class_i.shape, traj_i.shape)
 
-        centerness_gt = self.centerness_gt(total_points[0], coord_i).to(device)
-        #print("score_gt:", score_gt)
-        indices = self.matcher(total_points, total_points_class, coord_i, class_i)
-        predict_indices = indices[0][0]
-        target_indices = indices[0][1]
-        #print("predict_indices", predict_indices)
-        #print("target_indices", target_indices)
+
+        x = total_points[0][0]
+        y = total_points[0][1]
+        tanxy = y/x
+        if y<=0:
+            category = 0
+        else if (x>0 and tanxy < 0.726542528):
+            category = 1
+        else if (x>0 and 0.726542528<=tanxy<3.07768353718):
+            category = 2
+        else if (x>0 and 3.07768353718<=tanxy) or x==0 or (x<0 and tanxy<-3.07768353718):
+            category = 3
+        else if (x<0 and -3.07768353718<=x<-0.726542528):
+            category = 4
+        else:
+            category = 5
+
+        predict_indices = [6*category + i for i in range(0, 6)]
+        print("category:", category, "predict_indices:", predict_indices)
+
+        print(error)
         predict_points = torch.stack([coord_i[i] for i in predict_indices])
         predict_class = torch.stack([class_i[i] for i in predict_indices])
         predict_traj = torch.stack([traj_i[i] for i in predict_indices])
         predict_centerness = torch.stack([centerness_i[i] for i in predict_indices])
+
         target_class = torch.stack([total_points_class[i] for i in target_indices])
         target_centerness = torch.stack([centerness_gt[i] for i in target_indices])
-        #print("target_centerness.shape", target_centerness.shape)
-        #print("predict: ", predict_centerness)
-        #print("target: ", target_centerness)
-        predict_indices = []
-        num = 0
-        for i in target_indices:
-            if i <=5:
-                predict_indices.append(num)
-            num = num + 1
-        target_centerness = target_centerness.detach()
-        
+
+
         centerness_loss = F.binary_cross_entropy(predict_centerness.float(), target_centerness.squeeze().float())
         #print("centerness_loss:", centerness_loss)
 
