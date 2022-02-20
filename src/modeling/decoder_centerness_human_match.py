@@ -203,8 +203,8 @@ class SetCriterion(nn.Module):
         predict_centerness = torch.stack([centerness_i[i] for i in predict_indices])
 
 
-        target_point = total_points[0].unsqueeze(0).repeat(self.positive_num, 1)
-        target_class = torch.ones(self.positive_num).to(device)
+        target_point = total_points[0].unsqueeze(0).repeat(self.positive_points_num, 1)
+        target_class = torch.ones(self.positive_points_num).to(device)
         target_traj = gt_points.unsqueeze(0).repeat(self.positive_points_num, 1, 1).squeeze(0)
         target_centerness = centerness_gt(total_points[0], predict_points)
 
@@ -212,10 +212,6 @@ class SetCriterion(nn.Module):
 
 
         centerness_loss = F.binary_cross_entropy(predict_centerness.float(), target_centerness.squeeze().float())
-        #print("centerness_loss:", centerness_loss)
-
-
-        target_point = total_points
         point_loss = F.smooth_l1_loss(predict_points.float(), target_point.float())
         traj_loss = F.smooth_l1_loss(positive_traj.float(), target_traj.float())
         class_loss = F.binary_cross_entropy(predict_class.float(), target_class.float())
