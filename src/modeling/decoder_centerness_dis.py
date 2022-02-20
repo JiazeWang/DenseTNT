@@ -168,7 +168,7 @@ class SetCriterion(nn.Module):
         distance_all = torch.zeros([batch_size, 1])
         for i in range(0, batch_size):
             distance = torch.sqrt((gt_point[0] - coord_i[i][0]) ** 2 + (gt_point[1] - coord_i[i][1]) ** 2)
-            distance_all[i] = distances
+            distance_all[i] = distance
         return distance_all
 
     def forward(self, total_points, total_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i, centerness_i, device):
