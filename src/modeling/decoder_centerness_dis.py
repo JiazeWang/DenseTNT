@@ -178,7 +178,7 @@ class SetCriterion(nn.Module):
         #print("loss: ", total_points.shape, total_points_class.shape, coord_i.shape, class_i.shape, traj_i.shape)
 
         centerness_gt = self.centerness_gt(total_points[0], coord_i).to(device)
-        print("centerness_gt.shape:", centerness_gt.shape)
+        print("centerness_gt.shape:", centerness_gt)
         indices = self.matcher(total_points, total_points_class, coord_i, class_i)
         predict_indices = indices[0][0]
         target_indices = indices[0][1]
