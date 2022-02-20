@@ -194,7 +194,8 @@ class SetCriterion(nn.Module):
             category = 5
 
         predict_indices = [6*category + i for i in range(0, 6)]
-        print("category:", category, "predict_indices:", predict_indices)
+
+        #print("category:", category, "predict_indices:", predict_indices)
 
         #print(error)
         predict_points = torch.stack([coord_i[i] for i in predict_indices])
