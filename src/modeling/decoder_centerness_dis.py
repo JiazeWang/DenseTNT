@@ -168,18 +168,14 @@ class SetCriterion(nn.Module):
         distance_all = torch.zeros([batch_size, 1])
         for i in range(0, batch_size):
             distance = torch.sqrt((gt_point[0] - coord_i[i][0]) ** 2 + (gt_point[1] - coord_i[i][1]) ** 2)
-            if distance >=2:
-                centerness_i = 0
-            else:
-                centerness_i = 1 - torch.sqrt(distance/2)
-            distance_all[i] = centerness_i
+            distance_all[i] = distances
         return distance_all
 
     def forward(self, total_points, total_points_class, negative_points_class, gt_points, coord_i, class_i, traj_i, centerness_i, device):
         #print("loss: ", total_points.shape, total_points_class.shape, coord_i.shape, class_i.shape, traj_i.shape)
 
         centerness_gt = self.centerness_gt(total_points[0], coord_i).to(device)
-        score_gt = F.softmax(-(centerness_gt)/self.temper, dim=-1)
+        score_gt = F.softmax(-(centerness_gt)/self.temper, dim=0)
         print("score_gt:", score_gt)
         indices = self.matcher(total_points, total_points_class, coord_i, class_i)
         predict_indices = indices[0][0]
