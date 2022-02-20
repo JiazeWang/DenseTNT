@@ -166,7 +166,7 @@ class SetCriterion(nn.Module):
             if distance_error_i >=2:
                 centerness_i = 0
             else:
-                centerness_i = 1 - torch.sqrt(distance/2)
+                centerness_i = 1 - torch.sqrt(distance_error_i/2)
             centerness[i] = centerness_i
             distance_all[i]  = distance_error_i
         return centerness, distance_all
