@@ -193,7 +193,7 @@ class SetCriterion(nn.Module):
         #print("predict_traj:", predict_traj.shape, "gt_points:", gt_points.shape)
         traj_loss = F.smooth_l1_loss(predict_traj.float(), gt_points.float())
         target_centerness = centerness_gt[indices].detach()
-        print("target_centerness:", target_centerness)
+        #print("target_centerness:", target_centerness)
         #print("predict_centerness:",predict_centerness.shape, "target_centerness:",target_centerness.shape)
         centerness_loss = F.binary_cross_entropy(predict_centerness.float(), target_centerness.squeeze().float())
         #print("predict_points:",predict_points.shape,"target_point:",target_point.shape)
