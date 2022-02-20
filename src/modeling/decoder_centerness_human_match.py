@@ -204,7 +204,7 @@ class SetCriterion(nn.Module):
 
 
         target_points = total_points[0].unsqueeze(0).repeat(self.positive_points_num, 1)
-        target_class = torch.zeros(self.negative_num).to(device)
+        target_class = torch.zeros(36).to(device)
         for i in predict_indices:
             target_class[i] = 1
         print(target_class)
