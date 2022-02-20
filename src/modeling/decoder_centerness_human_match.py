@@ -182,13 +182,13 @@ class SetCriterion(nn.Module):
         tanxy = y/x
         if y<=0:
             category = 0
-        else if (x>0 and tanxy < 0.726542528):
+        elif (x>0 and tanxy < 0.726542528):
             category = 1
-        else if (x>0 and 0.726542528<=tanxy<3.07768353718):
+        elif (x>0 and 0.726542528<=tanxy<3.07768353718):
             category = 2
-        else if (x>0 and 3.07768353718<=tanxy) or x==0 or (x<0 and tanxy<-3.07768353718):
+        elif (x>0 and 3.07768353718<=tanxy) or x==0 or (x<0 and tanxy<-3.07768353718):
             category = 3
-        else if (x<0 and -3.07768353718<=x<-0.726542528):
+        elif (x<0 and -3.07768353718<=x<-0.726542528):
             category = 4
         else:
             category = 5
