@@ -198,13 +198,16 @@ class SetCriterion(nn.Module):
 
         #print(error)
         predict_points = torch.stack([coord_i[i] for i in predict_indices])
-        predict_class = torch.stack([class_i[i] for i in predict_indices])
+        predict_class = class_i
         predict_traj = torch.stack([traj_i[i] for i in predict_indices])
         predict_centerness = torch.stack([centerness_i[i] for i in predict_indices])
 
 
         target_points = total_points[0].unsqueeze(0).repeat(self.positive_points_num, 1)
-        target_class = torch.ones(self.positive_points_num).to(device)
+        target_class = torch.zeros(self.negative_num).to(device)
+        for i in predict_indices:
+            target_class[i] = 1
+        print(target_class)
         target_traj = gt_points.unsqueeze(0).repeat(self.positive_points_num, 1, 1).squeeze(0)
         target_centerness = self.centerness_gt(total_points[0], predict_points).to(device)
 
