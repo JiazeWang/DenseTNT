@@ -207,7 +207,7 @@ class SetCriterion(nn.Module):
         target_class = torch.zeros(36).to(device)
         for i in predict_indices:
             target_class[i] = 1
-        print(target_class)
+        #print(target_class)
         target_traj = gt_points.unsqueeze(0).repeat(self.positive_points_num, 1, 1).squeeze(0)
         target_centerness = self.centerness_gt(total_points[0], predict_points).to(device)
 
