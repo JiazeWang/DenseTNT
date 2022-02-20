@@ -206,7 +206,7 @@ class SetCriterion(nn.Module):
         target_point = total_points[0].unsqueeze(0).repeat(self.positive_points_num, 1)
         target_class = torch.ones(self.positive_points_num).to(device)
         target_traj = gt_points.unsqueeze(0).repeat(self.positive_points_num, 1, 1).squeeze(0)
-        target_centerness = centerness_gt(total_points[0], predict_points)
+        target_centerness = self.centerness_gt(total_points[0], predict_points).to(device)
 
 
 
