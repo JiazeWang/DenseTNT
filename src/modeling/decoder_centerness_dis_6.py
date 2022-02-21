@@ -181,13 +181,13 @@ class SetCriterion(nn.Module):
         #centerness_gt = centerness_gt.to(device)
         #distance_loss = distance_loss.to(device)
         indices = torch.argmin(distance_loss)
-        predict_class = class_i
+        predict_class = class_i[indices]
         predict_traj = traj_i[indices]
         predict_points = coord_i[indices]
         predict_centerness = centerness_i[indices]
 
 
-        points_class = torch.ones(6).to(device)
+        points_class = torch.ones(1).to(device)
         #print("predict_class:", predict_class.shape, "points_class:", points_class.shape)
         class_loss = F.binary_cross_entropy(predict_class.float(), points_class.float())
         #print("predict_traj:", predict_traj.shape, "gt_points:", gt_points.shape)
