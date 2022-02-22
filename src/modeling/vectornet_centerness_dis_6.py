@@ -273,7 +273,7 @@ class VectorNet(nn.Module):
             #print("agent_batch.shape:", agent_batch.shape, "agent_mask.shape:", agent_mask.shape)
 
             lane_batch, lane_mask = self.preprocess_traj(lanes_list, device)
-            #print("lane_batch.shape:", lane_batch.shape, "lane_batch.shape:", lane_mask.shape)
+            print("lane_batch:", lane_batch)
             #print("*agent_batch.shape[:2]: ", *agent_batch.shape[:2])
             batch_size = agent_batch.shape[0]
             social_num = agent_batch.shape[1]
@@ -326,6 +326,4 @@ class VectorNet(nn.Module):
         middletime = time.time()
         output = self.decoder(mapping, batch_size, outputs_coord, outputs_class, outputs_traj, outputs_centerness, coord_length, device=device)
         endtime = time.time()
-        #print("time:",(middletime-starttime), (endtime-middletime))
-
         return output
