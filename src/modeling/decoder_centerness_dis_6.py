@@ -176,7 +176,7 @@ class SetCriterion(nn.Module):
         #centerness_gt = self.centerness_gt(total_points[0], coord_i).to(device)
         target_point = total_points[0]
         #centerness_gt, distance_loss = self.distance_loss(target_point.to(device), coord_i.to(device))
-        centerness_gt =centerness_gt.to(device)
+        #centerness_gt =centerness_gt.to(device)
         distance_loss = distance_loss.to(device)
         #centerness_gt = centerness_gt.to(device)
         #distance_loss = distance_loss.to(device)
