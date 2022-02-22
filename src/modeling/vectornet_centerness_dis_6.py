@@ -250,10 +250,16 @@ class VectorNet(nn.Module):
 
 
         if 'stage_one' in args.other_params:
+            """
             assert 'sub_graph_map' not in args.other_params
             lane_states_batch = utils.merge_tensors_not_add_dim(map_input_list_list,
                                                                 module=self.stage_one_sub_graph_map,
                                                                 sub_batch_size=16, device=device)
+            """
+            lane_states_batch = []
+            for i in range(batch_size):
+                a, b = self.point_level_sub_graph(map_input_list_list[i])
+                lane_states_batch.append(a)
             #print("lane_states_batch.shape,", lane_states_batch.shape)
         agents_list = []
         lanes_list = []
@@ -265,7 +271,7 @@ class VectorNet(nn.Module):
                 #print("agents:", agents.shape)
                 lanes = element_states_batch[i][map_start_polyline_idx:]
                 #print("lanes:", lanes.shape)
-                #print("agents.shape: ", agents.shape, " lanes.shape: ", lanes.shape)
+                print("agents.shape: ", agents.shape, " lanes.shape: ", lanes.shape, "lane_states_batch:", lane_states_batch.shape)
                 agents_list.append(agents)
                 lanes_list.append(lanes)
 
@@ -273,7 +279,7 @@ class VectorNet(nn.Module):
             #print("agent_batch.shape:", agent_batch.shape, "agent_mask.shape:", agent_mask.shape)
 
             lane_batch, lane_mask = self.preprocess_traj(lanes_list, device)
-            print("lane_batch:", lane_batch)
+            #print("lane_batch:", lane_batch)
             #print("*agent_batch.shape[:2]: ", *agent_batch.shape[:2])
             batch_size = agent_batch.shape[0]
             social_num = agent_batch.shape[1]
