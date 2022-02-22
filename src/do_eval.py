@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 import structs
 import utils
-from modeling.vectornet_centerness_dis import VectorNet
+from modeling.vectornet_centerness_dis_6 import VectorNet
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
