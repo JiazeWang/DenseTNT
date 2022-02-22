@@ -72,12 +72,12 @@ class Decoder_predict(nn.Module):
                 class_i = outputs_class[i][0]
                 traj_i = outputs_traj[i][0]
                 centerness_i = outputs_centerness[i][0]
-                print("class_i", class_i)
-                print("centerness_i", centerness_i)
-                class_i = class_i.mul(centerness_i)
+                #print("class_i", class_i)
+                #print("centerness_i", centerness_i)
+                #class_i = class_i.mul(centerness_i)
                 index = torch.argmax(class_i).item()
-                with open("result.txt", 'a') as file:
-                    file.write(str(index)+"\n")
+                #with open("result.txt", 'a') as file:
+                #    file.write(str(index)+"\n")
                 coord_i = coord_i.cpu().detach().numpy()
                 class_i = class_i.cpu().detach().numpy()
                 traj_i = traj_i.cpu().detach().numpy()
@@ -175,7 +175,7 @@ class SetCriterion(nn.Module):
         #print("loss: ", total_points.shape, total_points_class.shape, coord_i.shape, class_i.shape, traj_i.shape)
         #centerness_gt = self.centerness_gt(total_points[0], coord_i).to(device)
         target_point = total_points[0]
-        centerness_gt, distance_loss = self.distance_loss(target_point.to(device), coord_i.to(device))
+        #centerness_gt, distance_loss = self.distance_loss(target_point.to(device), coord_i.to(device))
         centerness_gt =centerness_gt.to(device)
         distance_loss = distance_loss.to(device)
         #centerness_gt = centerness_gt.to(device)
@@ -184,7 +184,7 @@ class SetCriterion(nn.Module):
         predict_class = class_i[indices].reshape([1])
         predict_traj = traj_i[indices]
         predict_points = coord_i[indices]
-        predict_centerness = centerness_i[indices]
+        #predict_centerness = centerness_i[indices]
 
 
         points_class = torch.ones(1).to(device)
@@ -192,15 +192,15 @@ class SetCriterion(nn.Module):
         class_loss = F.binary_cross_entropy(predict_class.float(), points_class.float())
         #print("predict_traj:", predict_traj.shape, "gt_points:", gt_points.shape)
         traj_loss = F.smooth_l1_loss(predict_traj.float(), gt_points.float())
-        target_centerness = centerness_gt[indices].detach()
+        #target_centerness = centerness_gt[indices].detach()
         #print("target_centerness:", target_centerness)
         #print("predict_centerness:",predict_centerness.shape, "target_centerness:",target_centerness.shape)
-        centerness_loss = F.binary_cross_entropy(predict_centerness.float(), target_centerness.squeeze().float())
+        #centerness_loss = F.binary_cross_entropy(predict_centerness.float(), target_centerness.squeeze().float())
         #print("predict_points:",predict_points.shape,"target_point:",target_point.shape)
-        point_loss = F.smooth_l1_loss(predict_points.float(), target_point.float())
-        total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*class_loss + point_loss + centerness_loss
+        #point_loss = F.smooth_l1_loss(predict_points.float(), target_point.float())
+        total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*class_loss #+ point_loss #+ centerness_loss
 
-        class_i = class_i.mul(centerness_i)
+        #class_i = class_i.mul(centerness_i)
         index = torch.argmax(class_i).item()
         DE = torch.sqrt((coord_i[index][0] - gt_points[-1][0]) ** 2 + (coord_i[index][1] - gt_points[-1][1]) ** 2)
         #print("DE", DE)
