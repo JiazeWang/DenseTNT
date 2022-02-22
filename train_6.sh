@@ -1,5 +1,5 @@
 python src/run_centerness_6.py --argoverse --future_frame_num 30 \
-  --do_train --data_dir train/data/ --output_dir output_6_v5_wocenterness \
+  --do_train --data_dir train/data/ --output_dir output_6_v5_wocenterness+point \
   --hidden_size 128 --train_batch_size 128 --sub_graph_batch_size 4096 --use_map \
   --core_num 16 --use_centerline --distributed_training 4 --reuse_temp_file --temp_file_dir output \
   --other_params \
