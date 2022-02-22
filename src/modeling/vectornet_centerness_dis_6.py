@@ -272,6 +272,7 @@ class VectorNet(nn.Module):
                 lanes = element_states_batch[i][map_start_polyline_idx:]
                 #print("lanes:", lanes.shape)
                 print("agents.shape: ", agents.shape, " lanes.shape: ", lanes.shape, "lane_states_batch:", lane_states_batch[i].shape)
+                print(torch.max(lanes-lane_states_batch[i]), torch.min(lanes-lane_states_batch[i]))
                 agents_list.append(agents)
                 lanes_list.append(lanes)
 
