@@ -177,7 +177,7 @@ class SetCriterion(nn.Module):
         target_point = total_points[0]
         #centerness_gt, distance_loss = self.distance_loss(target_point.to(device), coord_i.to(device))
         #centerness_gt =centerness_gt.to(device)
-        distance_loss = distance_loss.to(device)
+        #distance_loss = distance_loss.to(device)
         #centerness_gt = centerness_gt.to(device)
         #distance_loss = distance_loss.to(device)
         indices = torch.argmin(distance_loss)
