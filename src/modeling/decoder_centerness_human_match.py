@@ -72,11 +72,11 @@ class Decoder_predict(nn.Module):
                 class_i = outputs_class[i][0]
                 traj_i = outputs_traj[i][0]
                 centerness_i = outputs_centerness[i][0]
-                print("class_i", class_i)
-                print("centerness_i", centerness_i)
-                class_i = class_i.mul(centerness_i)
+                #print("class_i", class_i)
+                #print("centerness_i", centerness_i)
+                #class_i = class_i.mul(centerness_i)
                 index = torch.argmax(class_i).item()
-                with open("result.txt", 'a') as file:
+                with open("result_v2.txt", 'a') as file:
                     file.write(str(index)+"\n")
                 coord_i = coord_i.cpu().detach().numpy()
                 class_i = class_i.cpu().detach().numpy()
