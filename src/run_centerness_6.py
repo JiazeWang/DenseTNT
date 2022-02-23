@@ -48,7 +48,7 @@ def learning_rate_decay(args, i_epoch, optimizer, optimizer_2=None):
     utils.i_epoch = i_epoch
 
 
-    if i_epoch > 0 and i_epoch % 20 == 0:
+    if i_epoch > 0 and i_epoch % 30 == 0:
         for p in optimizer.param_groups:
             p['lr'] *= 0.3
 """
