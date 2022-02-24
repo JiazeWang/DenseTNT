@@ -8,7 +8,7 @@ from torch import nn, Tensor
 from modeling.decoder_centerness_dis_6 import Decoder_predict
 from modeling.lib import MLP, GlobalGraph, LayerNorm, CrossAttention, GlobalGraphRes
 import utils
-
+import copy
 from modeling.TF_utils import (Decoder, DecoderLayer, Encoder, EncoderDecoder,
                         EncoderLayer, GeneratorWithParallelHeads_centerness,
                         LinearEmbedding, MultiHeadAttention,
