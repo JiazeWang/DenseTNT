@@ -231,7 +231,8 @@ class VectorNet(nn.Module):
         outputs_traj[:,:,:,-1,:] = outputs_coord
         outputs_centerness = self.generator_centerness(out).squeeze(-1)
         print("class:", outputs_class.shape,"traj:", outputs_traj.shape,"centerness:", outputs_centerness.shape)
-        print(error)
+        output = self.decoder(mapping, batch_size, outputs_coord, outputs_class, outputs_traj, outputs_centerness, coord_length=None, device=device)
+        endtime = time.time()
         utils.logging('time3', round(time.time() - starttime, 2), 'secs')
 
         return self.decoder(mapping, batch_size, lane_states_batch, inputs, inputs_lengths, hidden_states, device)
