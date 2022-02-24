@@ -203,6 +203,7 @@ class VectorNet(nn.Module):
             utils.batch_init(mapping)
 
         element_states_batch, lane_states_batch = self.forward_encode_sub_graph(mapping, matrix, polyline_spans, device, batch_size)
+        print("element_states_batch:", element_states_batch.shape, "lane_states_batch:", lane_states_batch.shape)
 
         inputs, inputs_lengths = utils.merge_tensors(element_states_batch, device=device)
         max_poly_num = max(inputs_lengths)
@@ -212,7 +213,7 @@ class VectorNet(nn.Module):
 
         #print("inputs.shape:", inputs.shape)
         hidden_states = self.global_graph(inputs, attention_mask, mapping)
-        #print("hidden_states.shape:", hidden_states.shape)
+        print("hidden_states.shape:", hidden_states.shape)
 
         batch_size = hidden_states.shape[0]
         social_num = hidden_states.shape[1]
