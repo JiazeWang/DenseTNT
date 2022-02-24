@@ -235,4 +235,4 @@ class VectorNet(nn.Module):
         endtime = time.time()
         utils.logging('time3', round(time.time() - starttime, 2), 'secs')
 
-        return self.decoder(mapping, batch_size, lane_states_batch, inputs, inputs_lengths, hidden_states, device)
+        return output
