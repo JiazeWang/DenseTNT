@@ -9,6 +9,11 @@ from modeling.decoder_centerness_dis_6 import Decoder_predict
 from modeling.lib import MLP, GlobalGraph, LayerNorm, CrossAttention, GlobalGraphRes
 import utils
 
+from modeling.TF_utils import (Decoder, DecoderLayer, Encoder, EncoderDecoder,
+                        EncoderLayer, GeneratorWithParallelHeads_centerness,
+                        LinearEmbedding, MultiHeadAttention,
+                        PointerwiseFeedforward, PositionalEncoding, EncoderLayer_NEW,
+                        SublayerConnection, Generator_traj, Generator_centerness, GeneratorWithParallelHeads626_softmax)
 
 class NewSubGraph(nn.Module):
 
@@ -81,6 +86,39 @@ class VectorNet(nn.Module):
 
         self.decoder = Decoder_predict(args, self)
 
+
+        N = 2
+        N_lane = 2
+        N_social = 2
+        d_model = 128
+        d_ff = 256
+        #pos_dim = 64
+        pos_dim = 128
+        dist_dim = 128
+        h = 2
+        dropout = 0
+        dropout_atten = 0
+        lane_inp_size = 128
+        hist_inp_size = 128
+        c = copy.deepcopy
+        num_queries = 6
+        dec_out_size = 2
+        self.num_queries = num_queries
+        attn = MultiHeadAttention(h, d_model, dropout=dropout_atten)
+        ff = PointerwiseFeedforward(d_model, d_ff, dropout)
+        position = PositionalEncoding(d_model, dropout)
+
+        self.query_embed = nn.Embedding(num_queries, d_model)
+        self.hist_tf = EncoderDecoder(
+            Encoder(EncoderLayer(d_model, c(attn), c(ff), dropout), N),
+            Decoder(DecoderLayer(d_model, c(attn), c(attn), c(ff), dropout), N),
+            nn.Sequential(LinearEmbedding(hist_inp_size, d_model), c(position))
+        )
+
+        self.lane_enc = Encoder(EncoderLayer(
+            d_model, c(attn), c(ff), dropout), N_lane)
+        self.lane_dec = Decoder(DecoderLayer(
+            d_model, c(attn), c(attn), c(ff), dropout), N_lane)
         #if 'complete_traj' in args.other_params:
         #    self.decoder.complete_traj_cross_attention = CrossAttention(hidden_size)
         #    self.decoder.complete_traj_decoder = DecoderResCat(hidden_size, hidden_size * 3, out_features=self.decoder.future_frame_num * 2)
@@ -167,6 +205,18 @@ class VectorNet(nn.Module):
         print("inputs.shape:", inputs.shape)
         hidden_states = self.global_graph(inputs, attention_mask, mapping)
         print("hidden_states.shape:", hidden_states.shape)
+
+        batch_size = hidden_states.shape[0]
+        social_num = hidden_states.shape[1]
+
+        self.query_batches = self.query_embed.weight.view(1, 1, *self.query_embed.weight.shape).repeat(*agent_batch.shape[:2], 1, 1)
+        agent_batch_input = agent_batch.unsqueeze(2)
+        #print("agent_batch_input.shape", agent_batch_input.shape)
+        hist_out = self.hist_tf(agent_batch_input, self.query_batches, None, None)
+        lane_mem = self.lane_enc(self.lane_emb(lane_batch), lane_mask)
+        lane_mem = lane_mem.unsqueeze(1).repeat(1, social_num, 1, 1)
+        lane_mask = lane_mask.unsqueeze(1).repeat(1, social_num, 1, 1)
+        lane_out = self.lane_dec(hist_out, lane_mem, lane_mask, None)
         print(error)
         utils.logging('time3', round(time.time() - starttime, 2), 'secs')
 
