@@ -210,19 +210,19 @@ class VectorNet(nn.Module):
         for i, length in enumerate(inputs_lengths):
             attention_mask[i][:length][:length].fill_(1)
 
-        print("inputs.shape:", inputs.shape)
+        #print("inputs.shape:", inputs.shape)
         hidden_states = self.global_graph(inputs, attention_mask, mapping)
-        print("hidden_states.shape:", hidden_states.shape)
+        #print("hidden_states.shape:", hidden_states.shape)
 
         batch_size = hidden_states.shape[0]
         social_num = hidden_states.shape[1]
 
         self.query_batches = self.query_embed.weight.view(1, 1, *self.query_embed.weight.shape).repeat(*hidden_states.shape[:2], 1, 1)
-        print("self.query_batches.shape:", self.query_batches.shape)
+        #print("self.query_batches.shape:", self.query_batches.shape)
         agent_batch_input = hidden_states.unsqueeze(2)
-        print("agent_batch_input.shape", agent_batch_input.shape)
+        #print("agent_batch_input.shape", agent_batch_input.shape)
         hist_out = self.hist_tf(agent_batch_input, self.query_batches, None, None)
-        print("hist_out.shape:", hist_out.shape)
+        #print("hist_out.shape:", hist_out.shape)
         out = hist_out
         outputs_coord, outputs_class = self.prediction_header(out)
         outputs_coord_feature = self.out_pos_emb(outputs_coord)
@@ -230,7 +230,7 @@ class VectorNet(nn.Module):
         outputs_traj = self.generator_header(out)
         outputs_traj[:,:,:,-1,:] = outputs_coord
         outputs_centerness = self.generator_centerness(out).squeeze(-1)
-        print("class:", outputs_class.shape,"traj:", outputs_traj.shape,"centerness:", outputs_centerness.shape)
+        #print("class:", outputs_class.shape,"traj:", outputs_traj.shape,"centerness:", outputs_centerness.shape)
         output = self.decoder(mapping, batch_size, outputs_coord, outputs_class, outputs_traj, outputs_centerness, coord_length=None, device=device)
         endtime = time.time()
         utils.logging('time3', round(time.time() - starttime, 2), 'secs')
