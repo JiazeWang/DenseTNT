@@ -15,6 +15,18 @@ from modeling.TF_utils import (Decoder, DecoderLayer, Encoder, EncoderDecoder,
                         PointerwiseFeedforward, PositionalEncoding, EncoderLayer_NEW,
                         SublayerConnection, Generator_traj, Generator_centerness, GeneratorWithParallelHeads626_softmax)
 
+
+class DecoderResCat(nn.Module):
+    def __init__(self, hidden_size, in_features, out_features=128):
+        super(DecoderResCat, self).__init__()
+        self.mlp = MLP(in_features, hidden_size)
+        self.fc = nn.Linear(hidden_size + in_features, out_features)
+
+    def forward(self, hidden_states):
+        hidden_states = torch.cat([hidden_states, self.mlp(hidden_states)], dim=-1)
+        hidden_states = self.fc(hidden_states)
+        return hidden_states
+
 class NewSubGraph(nn.Module):
 
     def __init__(self, hidden_size, depth=None):
@@ -124,12 +136,14 @@ class VectorNet(nn.Module):
             nn.ReLU(),
             nn.Linear(pos_dim, pos_dim, bias=True))
 
+
         self.prediction_header = GeneratorWithParallelHeads626_softmax(d_model, dec_out_size, dropout)
 
         self.generator_header = Generator_traj(d_model*2, 60, dropout)
 
         self.generator_centerness = Generator_centerness(d_model*2, 1, dropout)
 
+        self.DecoderResCat = DecoderResCat(128, 128)
 
     def forward_encode_sub_graph(self, mapping: List[Dict], matrix: List[np.ndarray], polyline_spans: List[List[slice]],
                                  device, batch_size) -> Tuple[List[Tensor], List[Tensor]]:
@@ -221,8 +235,8 @@ class VectorNet(nn.Module):
 
         self.query_batches = self.query_embed.weight.view(1, 1, *self.query_embed.weight.shape).repeat(*hidden_states.shape[:2], 1, 1)
         #print("self.query_batches.shape:", self.query_batches.shape)
-        agent_batch_input = hidden_states.unsqueeze(2)
-        #print("agent_batch_input.shape", agent_batch_input.shape)
+        agent_batch_input = hidden_states[:, 0, :].unsqueeze(1).unsqueeze(1)
+        print("agent_batch_input.shape", agent_batch_input.shape)
         hist_out = self.hist_tf(agent_batch_input, self.query_batches, None, None)
         #print("hist_out.shape:", hist_out.shape)
         out = hist_out
