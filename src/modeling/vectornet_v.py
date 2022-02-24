@@ -79,7 +79,7 @@ class VectorNet(nn.Module):
             self.laneGCN_L2L = GlobalGraphRes(hidden_size)
             self.laneGCN_L2A = CrossAttention(hidden_size)
 
-        self.decoder = Decoder(args, self)
+        self.decoder = Decoder_predict(args, self)
 
         #if 'complete_traj' in args.other_params:
         #    self.decoder.complete_traj_cross_attention = CrossAttention(hidden_size)
