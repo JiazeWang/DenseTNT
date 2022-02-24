@@ -211,12 +211,9 @@ class VectorNet(nn.Module):
 
         self.query_batches = self.query_embed.weight.view(1, 1, *self.query_embed.weight.shape).repeat(*agent_batch.shape[:2], 1, 1)
         agent_batch_input = agent_batch.unsqueeze(2)
-        #print("agent_batch_input.shape", agent_batch_input.shape)
+        print("agent_batch_input.shape", agent_batch_input.shape)
         hist_out = self.hist_tf(agent_batch_input, self.query_batches, None, None)
-        lane_mem = self.lane_enc(self.lane_emb(lane_batch), lane_mask)
-        lane_mem = lane_mem.unsqueeze(1).repeat(1, social_num, 1, 1)
-        lane_mask = lane_mask.unsqueeze(1).repeat(1, social_num, 1, 1)
-        lane_out = self.lane_dec(hist_out, lane_mem, lane_mask, None)
+        print("hist_out.shape:", hist_out.shape)
         print(error)
         utils.logging('time3', round(time.time() - starttime, 2), 'secs')
 
