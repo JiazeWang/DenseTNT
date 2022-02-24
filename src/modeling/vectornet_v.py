@@ -124,11 +124,11 @@ class VectorNet(nn.Module):
             nn.ReLU(),
             nn.Linear(pos_dim, pos_dim, bias=True))
 
-        self.prediction_header = GeneratorWithParallelHeads626_softmax(d_model*2, dec_out_size, dropout)
+        self.prediction_header = GeneratorWithParallelHeads626_softmax(d_model, dec_out_size, dropout)
 
-        self.generator_header = Generator_traj(d_model*3, 60, dropout)
+        self.generator_header = Generator_traj(d_model*2, 60, dropout)
 
-        self.generator_centerness = Generator_centerness(d_model*3, 1, dropout)
+        self.generator_centerness = Generator_centerness(d_model*2, 1, dropout)
 
 
     def forward_encode_sub_graph(self, mapping: List[Dict], matrix: List[np.ndarray], polyline_spans: List[List[slice]],
