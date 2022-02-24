@@ -215,6 +215,14 @@ class VectorNet(nn.Module):
         print("agent_batch_input.shape", agent_batch_input.shape)
         hist_out = self.hist_tf(agent_batch_input, self.query_batches, None, None)
         print("hist_out.shape:", hist_out.shape)
+        out = hist_out
+        outputs_coord, outputs_class = self.prediction_header(out)
+        outputs_coord_feature = self.out_pos_emb(outputs_coord)
+        out = torch.cat([out, outputs_coord_feature], -1)
+        outputs_traj = self.generator_header(out)
+        outputs_traj[:,:,:,-1,:] = outputs_coord
+        outputs_centerness = self.generator_centerness(out).squeeze(-1)
+        print("class:", outputs_class.shape,"traj:", outputs_traj.shape,"centerness:", outputs_centerness.shape)
         print(error)
         utils.logging('time3', round(time.time() - starttime, 2), 'secs')
 
