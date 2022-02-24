@@ -209,7 +209,8 @@ class VectorNet(nn.Module):
         batch_size = hidden_states.shape[0]
         social_num = hidden_states.shape[1]
 
-        self.query_batches = self.query_embed.weight.view(1, 1, *self.query_embed.weight.shape).repeat(*agent_batch.shape[:2], 1, 1)
+        self.query_batches = self.query_embed.weight.view(1, 1, *self.query_embed.weight.shape).repeat(*hidden_states.shape[:2], 1, 1)
+        print("self.query_batches.shape:", self.query_batches.shape)
         agent_batch_input = agent_batch.unsqueeze(2)
         print("agent_batch_input.shape", agent_batch_input.shape)
         hist_out = self.hist_tf(agent_batch_input, self.query_batches, None, None)
