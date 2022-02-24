@@ -269,10 +269,10 @@ class VectorNet(nn.Module):
             for i in range(batch_size):
                 map_start_polyline_idx = mapping[i]['map_start_polyline_idx']
                 agents = element_states_batch[i][:map_start_polyline_idx]
-                #print("agents:", agents.shape)
+                print("agents:", agents.shape)
                 #lanes = element_states_batch[i][map_start_polyline_idx:]
                 lanes = lane_states_batch[i]
-                #print("lanes:", lanes.shape)
+                print("lanes:", lanes.shape)
                 #print("agents.shape: ", agents.shape, " lanes.shape: ", lanes.shape, "lane_states_batch:", lane_states_batch[i].shape)
                 #print(torch.max(lanes-lane_states_batch[i]), torch.min(lanes-lane_states_batch[i]))
                 agents_list.append(agents)
@@ -289,7 +289,7 @@ class VectorNet(nn.Module):
             neighbor_num = lane_batch.shape[1]
             self.query_batches = self.query_embed.weight.view(1, 1, *self.query_embed.weight.shape).repeat(*agent_batch.shape[:2], 1, 1)
             agent_batch_input = agent_batch.unsqueeze(2)
-            #print("agent_batch_input.shape", agent_batch_input.shape)
+            #sprint("agent_batch_input.shape", agent_batch_input.shape)
             hist_out = self.hist_tf(agent_batch_input, self.query_batches, None, None)
             lane_mem = self.lane_enc(self.lane_emb(lane_batch), lane_mask)
             lane_mem = lane_mem.unsqueeze(1).repeat(1, social_num, 1, 1)
