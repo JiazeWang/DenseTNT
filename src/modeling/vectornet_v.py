@@ -175,6 +175,9 @@ class VectorNet(nn.Module):
         self.generator_header = Generator_traj(d_model*3, 60, dropout)
 
         self.generator_centerness = Generator_centerness(d_model*3, 1, dropout)
+
+        self.social_dec = Decoder(DecoderLayer(
+            d_model, c(attn), c(attn), c(ff), dropout), N_social)
     def preprocess_traj(self, traj, device):
         '''
             Generate the trajectory mask for all agents (including target agent)
@@ -259,7 +262,7 @@ class VectorNet(nn.Module):
             """
             lane_states_batch = []
             for i in range(batch_size):
-                a, b = self.point_level_sub_graph_lane(map_input_list_list[i])
+                a, b = self.point_level_sub_graph(map_input_list_list[i])
                 lane_states_batch.append(a)
             #print("lane_states_batch.shape,", lane_states_batch.shape)
         agents_list = []
@@ -302,6 +305,9 @@ class VectorNet(nn.Module):
             dist = self.dist_emb(dist)
             social_inp = self.fusion2(torch.cat([agent_batch, dist], -1))
             social_mem = self.social_enc(social_inp, agent_mask)
+            print("before_decoder:", social_mem.shape)
+            social_mem = self.social_dec(social_mem, social_mem, agent_mask, None)
+            print("after_decoder:", social_mem.shape)
             social_out = social_mem.unsqueeze(
                 dim=2).repeat(1, 1, self.num_queries, 1)
             out = torch.cat([social_out, lane_out], -1)
