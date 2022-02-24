@@ -5,7 +5,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn, Tensor
 
-from modeling.decoder_centerness_dis_6 import Decoder, DecoderResCat
+from modeling.decoder_centerness_dis_6 import Decoder_predict
 from modeling.lib import MLP, GlobalGraph, LayerNorm, CrossAttention, GlobalGraphRes
 import utils
 
@@ -81,9 +81,9 @@ class VectorNet(nn.Module):
 
         self.decoder = Decoder(args, self)
 
-        if 'complete_traj' in args.other_params:
-            self.decoder.complete_traj_cross_attention = CrossAttention(hidden_size)
-            self.decoder.complete_traj_decoder = DecoderResCat(hidden_size, hidden_size * 3, out_features=self.decoder.future_frame_num * 2)
+        #if 'complete_traj' in args.other_params:
+        #    self.decoder.complete_traj_cross_attention = CrossAttention(hidden_size)
+        #    self.decoder.complete_traj_decoder = DecoderResCat(hidden_size, hidden_size * 3, out_features=self.decoder.future_frame_num * 2)
 
     def forward_encode_sub_graph(self, mapping: List[Dict], matrix: List[np.ndarray], polyline_spans: List[List[slice]],
                                  device, batch_size) -> Tuple[List[Tensor], List[Tensor]]:
