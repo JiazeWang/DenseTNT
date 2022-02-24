@@ -203,9 +203,10 @@ class VectorNet(nn.Module):
             utils.batch_init(mapping)
 
         element_states_batch, lane_states_batch = self.forward_encode_sub_graph(mapping, matrix, polyline_spans, device, batch_size)
-        print("element_states_batch:", element_states_batch.shape, "lane_states_batch:", lane_states_batch.shape)
+        #print("element_states_batch:", element_states_batch.shape, "lane_states_batch:", lane_states_batch.shape)
 
         inputs, inputs_lengths = utils.merge_tensors(element_states_batch, device=device)
+        print("inputs.shape:", inputs.shape)
         max_poly_num = max(inputs_lengths)
         attention_mask = torch.zeros([batch_size, max_poly_num, max_poly_num], device=device)
         for i, length in enumerate(inputs_lengths):
