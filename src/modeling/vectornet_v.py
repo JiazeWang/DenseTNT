@@ -5,7 +5,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn, Tensor
 
-from modeling.decoder_v import Decoder_predict
+from modeling.decoder_centerness_dis_6 import Decoder_predict
 from modeling.lib import MLP, GlobalGraph, LayerNorm, CrossAttention, GlobalGraphRes
 import utils
 import copy
@@ -141,8 +141,7 @@ class VectorNet(nn.Module):
 
         self.generator_header = Generator_traj(d_model*2, 60, dropout)
 
-
-        #self.generator_centerness = Generator_centerness(d_model*2, 1, dropout)
+        self.generator_centerness = Generator_centerness(d_model*2, 1, dropout)
 
         self.DecoderResCat = DecoderResCat(128, 128)
 
@@ -221,7 +220,7 @@ class VectorNet(nn.Module):
         #print("element_states_batch:", element_states_batch.shape, "lane_states_batch:", lane_states_batch.shape)
 
         inputs, inputs_lengths = utils.merge_tensors(element_states_batch, device=device)
-        #print("inputs.shape:", inputs.shape)
+        print("inputs.shape:", inputs.shape)
         max_poly_num = max(inputs_lengths)
         attention_mask = torch.zeros([batch_size, max_poly_num, max_poly_num], device=device)
         for i, length in enumerate(inputs_lengths):
@@ -229,7 +228,7 @@ class VectorNet(nn.Module):
 
         #print("inputs.shape:", inputs.shape)
         hidden_states = self.global_graph(inputs, attention_mask, mapping)
-        #print("hidden_states.shape:", hidden_states.shape)
+        print("hidden_states.shape:", hidden_states.shape)
 
         batch_size = hidden_states.shape[0]
         social_num = hidden_states.shape[1]
@@ -237,7 +236,7 @@ class VectorNet(nn.Module):
         self.query_batches = self.query_embed.weight.view(1, 1, *self.query_embed.weight.shape).repeat(*hidden_states.shape[:1], 1, 1, 1)
         #print("self.query_batches.shape:", self.query_batches.shape)
         agent_batch_input = hidden_states[:, 0, :].unsqueeze(1).unsqueeze(1)
-        #print("agent_batch_input.shape", agent_batch_input.shape)
+        print("agent_batch_input.shape", agent_batch_input.shape)
         hist_out = self.hist_tf(agent_batch_input, self.query_batches, None, None)
         #print("hist_out.shape:", hist_out.shape)
         out = hist_out
@@ -246,9 +245,9 @@ class VectorNet(nn.Module):
         out = torch.cat([out, outputs_coord_feature], -1)
         outputs_traj = self.generator_header(out)
         outputs_traj[:,:,:,-1,:] = outputs_coord
-        #outputs_centerness = self.generator_centerness(out).squeeze(-1)
+        outputs_centerness = self.generator_centerness(out).squeeze(-1)
         #print("class:", outputs_class.shape,"traj:", outputs_traj.shape,"centerness:", outputs_centerness.shape)
-        output = self.decoder(mapping, batch_size, outputs_coord, outputs_class, outputs_traj, coord_length=None, device=device)
+        output = self.decoder(mapping, batch_size, outputs_coord, outputs_class, outputs_traj, outputs_centerness, coord_length=None, device=device)
         endtime = time.time()
         utils.logging('time3', round(time.time() - starttime, 2), 'secs')
 
