@@ -82,7 +82,7 @@ class VectorNet(nn.Module):
             # TODO!  tnt needs stage_one?
             # assert 'stage_one' in args.other_params
         self.point_level_sub_graph = NewSubGraph(hidden_size)
-        self.point_level_sub_graph_lane = NewSubGraph(hidden_size)
+        #self.point_level_sub_graph_lane = NewSubGraph(hidden_size)
         self.point_level_cross_attention = CrossAttention(hidden_size)
 
         self.global_graph = GlobalGraph(hidden_size)
@@ -259,7 +259,7 @@ class VectorNet(nn.Module):
             """
             lane_states_batch = []
             for i in range(batch_size):
-                a, b = self.point_level_sub_graph_lane(map_input_list_list[i])
+                a, b = self.point_level_sub_graph(map_input_list_list[i])
                 lane_states_batch.append(a)
             #print("lane_states_batch.shape,", lane_states_batch.shape)
         agents_list = []
