@@ -153,6 +153,7 @@ class SetCriterion(nn.Module):
         self.losses = 0
         self.traj_loss_w = 1
         self.class_loss_w = 1
+        self.point_loss = 2
         self.positive_points_num = 6
         self.negative_points_num = 6-6
         self.temper = 0.01
@@ -198,7 +199,7 @@ class SetCriterion(nn.Module):
         #centerness_loss = F.binary_cross_entropy(predict_centerness.float(), target_centerness.squeeze().float())
         #print("predict_points:",predict_points.shape,"target_point:",target_point.shape)
         point_loss = F.smooth_l1_loss(predict_points.float(), target_point.float())
-        total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*class_loss + point_loss #+ centerness_loss
+        total_loss = self.traj_loss_w*traj_loss+self.class_loss_w*class_loss + point_loss * self.point_loss #+ centerness_loss
 
         #class_i = class_i.mul(centerness_i)
         index = torch.argmax(class_i).item()
