@@ -153,7 +153,7 @@ class SetCriterion(nn.Module):
         self.losses = 0
         self.traj_loss_w = 1
         self.class_loss_w = 1
-        self.point_loss_w = 2
+        self.point_loss_w = 3
         self.positive_points_num = 6
         self.negative_points_num = 6-6
         self.temper = 0.01
