@@ -82,7 +82,7 @@ class VectorNet(nn.Module):
             # TODO!  tnt needs stage_one?
             # assert 'stage_one' in args.other_params
         self.point_level_sub_graph = NewSubGraph(hidden_size)
-        self.point_level_sub_graph_lane = NewSubGraph(hidden_size)
+        #self.point_level_sub_graph_lane = NewSubGraph(hidden_size)
         self.point_level_cross_attention = CrossAttention(hidden_size)
 
         self.global_graph = GlobalGraph(hidden_size)
@@ -175,9 +175,6 @@ class VectorNet(nn.Module):
         self.generator_header = Generator_traj(d_model*3, 60, dropout)
 
         self.generator_centerness = Generator_centerness(d_model*3, 1, dropout)
-
-        self.social_dec = Decoder(DecoderLayer(
-            d_model, c(attn), c(attn), c(ff), dropout), N_social)
     def preprocess_traj(self, traj, device):
         '''
             Generate the trajectory mask for all agents (including target agent)
@@ -305,9 +302,6 @@ class VectorNet(nn.Module):
             dist = self.dist_emb(dist)
             social_inp = self.fusion2(torch.cat([agent_batch, dist], -1))
             social_mem = self.social_enc(social_inp, agent_mask)
-            #print("before_decoder:", social_mem.shape)
-            social_mem = self.social_dec(social_mem, social_mem, agent_mask, None)
-            #print("after_decoder:", social_mem.shape)
             social_out = social_mem.unsqueeze(
                 dim=2).repeat(1, 1, self.num_queries, 1)
             out = torch.cat([social_out, lane_out], -1)
@@ -315,7 +309,7 @@ class VectorNet(nn.Module):
             outputs_coord_feature = self.out_pos_emb(outputs_coord)
             out = torch.cat([out, outputs_coord_feature], -1)
             outputs_traj = self.generator_header(out)
-            #rint("outputs_traj:", outputs_traj.shape)
+            #print("outputs_traj:", outputs_traj.shape)
             #print("outputs_coord:", outputs_coord.shape)
             outputs_traj[:,:,:,-1,:] = outputs_coord
             outputs_centerness = self.generator_centerness(out).squeeze(-1)
