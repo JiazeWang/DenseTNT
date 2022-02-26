@@ -100,19 +100,19 @@ class VectorNet(nn.Module):
         self.decoder = Decoder_predict(args, self)
 
         #if 'complete_traj' in args.other_params:
-        N = 2
-        N_lane = 2
-        N_social = 2
-        d_model = 128*2
-        d_ff = 256*2
+        N = 4
+        N_lane = 4
+        N_social = 4
+        d_model = 128
+        d_ff = 256
         #pos_dim = 64
-        pos_dim = 128*2
-        dist_dim = 128*2
+        pos_dim = 128
+        dist_dim = 128
         h = 2
         dropout = 0
         dropout_atten = 0
-        lane_inp_size = 128*2
-        hist_inp_size = 128*2
+        lane_inp_size = 128
+        hist_inp_size = 128
         c = copy.deepcopy
         num_queries = 6
         dec_out_size = 2
