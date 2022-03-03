@@ -108,7 +108,7 @@ class VectorNet(nn.Module):
         #pos_dim = 64
         pos_dim = 128
         dist_dim = 128
-        h = 4
+        h = 2
         dropout = 0
         dropout_atten = 0
         lane_inp_size = 128
