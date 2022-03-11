@@ -6,7 +6,7 @@ pickle_file = open('ex_list_new', 'wb')
 instance_all = []
 print("len(ex_list):", len(ex_list))
 for i in range(0, len(ex_list)):
-    print("i:", i)
+    print("i:", i, "/", len(ex_list))
     data_compress = ex_list[i]
     instance_all.append(data_compress)
     instance = pickle.loads(zlib.decompress(data_compress))
