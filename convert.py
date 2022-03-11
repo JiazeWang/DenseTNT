@@ -4,7 +4,8 @@ pickle_file = open('ex_list', 'rb')
 ex_list = pickle.load(pickle_file)
 pickle_file = open('ex_list_new', 'wb')
 instance_all = []
-for i in range(0, 20):
+print("len(ex_list):", len(ex_list))
+for i in range(0, len(ex_list)):
     print("i:", i)
     data_compress = ex_list[i]
     instance_all.append(data_compress)
@@ -49,6 +50,6 @@ for i in range(0, 20):
         instance['matrix'][i][-3] = -instance['matrix'][i][-3]
         instance['matrix'][i][-17] = -instance['matrix'][i][-17]
     data_compress = zlib.compress(pickle.dumps(instance))
-    instance_all.append(instance)
+    instance_all.append(data_compress)
 pickle.dump(instance_all, pickle_file)
 pickle_file.close()
