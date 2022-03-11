@@ -283,13 +283,13 @@ def preprocess(args, id2info, mapping):
 
     t = len(vectors)
     mapping['map_start_polyline_idx'] = len(polyline_spans)
-    #print("vectors.shape", vectors)
+    print("vectors.shape", vectors)
     if args.use_map:
         vectors, polyline_spans = get_sub_map(args, mapping['cent_x'], mapping['cent_y'], mapping['city_name'],
                                               vectors=vectors,
                                               polyline_spans=polyline_spans, mapping=mapping)
 
-    #print('len(vectors)', len(vectors))
+    print('len(vectors)', len(vectors))
 
     matrix = np.array(vectors)
     #print("matrix.shape: ", matrix[0])
