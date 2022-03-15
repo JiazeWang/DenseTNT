@@ -235,8 +235,13 @@ def demo_basic(rank, world_size, kwargs, queue):
     else:
         model = VectorNet(args).to(rank)
 
+    if args.model_recover_path is not None:
+        print("Recovering from:", args.model_recover_path)
+        model_recover = torch.load(args.model_recover_path)
+        model.load_state_dict(model_recover)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
+    #optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=0.00009, weight_decay=1e-4)
     print("******using adamw******")
     if rank == 0 and world_size > 0:
         receive = queue.get()
@@ -259,7 +264,7 @@ def demo_basic(rank, world_size, kwargs, queue):
             batch_size=args.train_batch_size // world_size,
             collate_fn=utils.batch_list_to_batch_tensors)
     print("*******************************************model**********************************************")
-    print(model)
+    #print(model)
     for i_epoch in range(int(args.num_train_epochs)):
         #if 'complete_traj-3' in args.other_params:
         #    learning_rate_decay(args, i_epoch, optimizer, optimizer_2)
