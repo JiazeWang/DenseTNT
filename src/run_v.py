@@ -231,14 +231,19 @@ def demo_basic(rank, world_size, kwargs, queue):
         utils.args = args
         model = VectorNet(args).to(rank)
 
+        if args.model_recover_path is not None:
+            print("Recovering from:", args.model_recover_path)
+            model_recover = torch.load(args.model_recover_path)
+            model.load_state_dict(model_recover)
+
         model = DDP(model, device_ids=[rank], find_unused_parameters=True)
     else:
         model = VectorNet(args).to(rank)
 
-    if args.model_recover_path is not None:
-        print("Recovering from:", args.model_recover_path)
-        model_recover = torch.load(args.model_recover_path)
-        model.load_state_dict(model_recover)
+        if args.model_recover_path is not None:
+            print("Recovering from:", args.model_recover_path)
+            model_recover = torch.load(args.model_recover_path)
+            model.load_state_dict(model_recover)
 
     #optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
     optimizer = torch.optim.AdamW(model.parameters(), lr=0.00009, weight_decay=1e-4)
