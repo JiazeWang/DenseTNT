@@ -245,8 +245,8 @@ def demo_basic(rank, world_size, kwargs, queue):
             model_recover = torch.load(args.model_recover_path)
             model.load_state_dict(model_recover)
 
-    #optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
-    optimizer = torch.optim.AdamW(model.parameters(), lr=0.00009, weight_decay=1e-4)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
+    #optimizer = torch.optim.AdamW(model.parameters(), lr=0.00009, weight_decay=1e-4)
     print("******using adamw******")
     if rank == 0 and world_size > 0:
         receive = queue.get()
