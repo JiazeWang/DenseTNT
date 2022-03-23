@@ -337,6 +337,7 @@ class VectorNet(nn.Module):
             #print("outputs_coord:", outputs_coord.shape)
             outputs_traj = torch.cat([outputs_traj0, outputs_traj1, outputs_traj2], -2)
             outputs_coord = outputs_coord2
+            outputs_class = outputs_class2
             outputs_centerness = self.generator_centerness(out3).squeeze(-1)
             #print("outputs_traj.shape:", outputs_traj.shape)
         return outputs_coord, outputs_class, outputs_traj, outputs_centerness
