@@ -170,11 +170,22 @@ class VectorNet(nn.Module):
             nn.ReLU(),
             nn.Linear(pos_dim, pos_dim, bias=True))
 
-        self.prediction_header = GeneratorWithParallelHeads626_softmax(d_model*2, dec_out_size, dropout)
+        self.out_traj_emb = nn.Sequential(
+            nn.Linear(20, pos_dim, bias=True),
+            nn.LayerNorm(pos_dim),
+            nn.ReLU(),
+            nn.Linear(pos_dim, pos_dim, bias=True))
 
-        self.generator_header = Generator_traj(d_model*3, 60, dropout)
 
-        self.generator_centerness = Generator_centerness(d_model*3, 1, dropout)
+        self.prediction_header0 = GeneratorWithParallelHeads626_softmax(d_model*2, dec_out_size, dropout)
+        self.prediction_header1 = GeneratorWithParallelHeads626_softmax(d_model*3, dec_out_size, dropout)
+        self.prediction_header2 = GeneratorWithParallelHeads626_softmax(d_model*4, dec_out_size, dropout)
+
+        self.generator_header0 = Generator_traj(d_model*3, 20, dropout)
+        self.generator_header1 = Generator_traj(d_model*4, 20, dropout)
+        self.generator_header2 = Generator_traj(d_model*5, 20, dropout)
+
+        self.generator_centerness = Generator_centerness(d_model*5, 1, dropout)
     def preprocess_traj(self, traj, device):
         '''
             Generate the trajectory mask for all agents (including target agent)
@@ -305,14 +316,28 @@ class VectorNet(nn.Module):
             social_out = social_mem.unsqueeze(
                 dim=2).repeat(1, 1, self.num_queries, 1)
             out = torch.cat([social_out, lane_out], -1)
-            outputs_coord, outputs_class = self.prediction_header(out)
-            outputs_coord_feature = self.out_pos_emb(outputs_coord)
-            out = torch.cat([out, outputs_coord_feature], -1)
-            outputs_traj = self.generator_header(out)
+            outputs_coord0, outputs_class0 = self.prediction_header0(out)
+            outputs_coord_feature0 = self.out_pos_emb(outputs_coord0)
+            out1 = torch.cat([out0, outputs_coord_feature0], -1)
+            outputs_coord1, outputs_class1 = self.prediction_header1(out1)
+            outputs_coord_feature1 = self.out_pos_emb(outputs_coord1)
+            out2 = torch.cat([out1, outputs_coord_feature1], -1)
+            outputs_coord2, outputs_class2 = self.prediction_header2(out)
+            outputs_coord_feature2 = self.out_pos_emb(outputs_coord2)
+            out3 = torch.cat([out2, outputs_coord_feature2], -1)
+
+            outputs_traj0 = self.generator_header0(out1)
+            outputs_traj0[:,:,:,-1,:] = outputs_coord0
+            outputs_traj1 = self.generator_header1(out2)
+            outputs_traj1[:,:,:,-1,:] = outputs_coord1
+            outputs_traj2 = self.generator_header2(out3)
+            outputs_traj2[:,:,:,-1,:] = outputs_coord2
+
             #print("outputs_traj:", outputs_traj.shape)
             #print("outputs_coord:", outputs_coord.shape)
-            outputs_traj[:,:,:,-1,:] = outputs_coord
-            outputs_centerness = self.generator_centerness(out).squeeze(-1)
+            outputs_traj = torch.cat([outputs_traj0, outputs_traj1, outputs_traj2], -2)
+            outputs_centerness = self.generator_centerness(out3).squeeze(-1)
+            print("outputs_traj.shape:", outputs_traj.shape)
         return outputs_coord, outputs_class, outputs_traj, outputs_centerness
 
     # @profile
