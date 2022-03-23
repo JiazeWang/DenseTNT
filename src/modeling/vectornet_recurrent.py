@@ -322,7 +322,7 @@ class VectorNet(nn.Module):
             outputs_coord1, outputs_class1 = self.prediction_header1(out1)
             outputs_coord_feature1 = self.out_pos_emb(outputs_coord1)
             out2 = torch.cat([out1, outputs_coord_feature1], -1)
-            outputs_coord2, outputs_class2 = self.prediction_header2(out)
+            outputs_coord2, outputs_class2 = self.prediction_header2(out2)
             outputs_coord_feature2 = self.out_pos_emb(outputs_coord2)
             out3 = torch.cat([out2, outputs_coord_feature2], -1)
 
@@ -337,7 +337,7 @@ class VectorNet(nn.Module):
             #print("outputs_coord:", outputs_coord.shape)
             outputs_traj = torch.cat([outputs_traj0, outputs_traj1, outputs_traj2], -2)
             outputs_centerness = self.generator_centerness(out3).squeeze(-1)
-            print("outputs_traj.shape:", outputs_traj.shape)
+            #print("outputs_traj.shape:", outputs_traj.shape)
         return outputs_coord, outputs_class, outputs_traj, outputs_centerness
 
     # @profile
