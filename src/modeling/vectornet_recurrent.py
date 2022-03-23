@@ -318,7 +318,7 @@ class VectorNet(nn.Module):
             out = torch.cat([social_out, lane_out], -1)
             outputs_coord0, outputs_class0 = self.prediction_header0(out)
             outputs_coord_feature0 = self.out_pos_emb(outputs_coord0)
-            out1 = torch.cat([out0, outputs_coord_feature0], -1)
+            out1 = torch.cat([out, outputs_coord_feature0], -1)
             outputs_coord1, outputs_class1 = self.prediction_header1(out1)
             outputs_coord_feature1 = self.out_pos_emb(outputs_coord1)
             out2 = torch.cat([out1, outputs_coord_feature1], -1)
