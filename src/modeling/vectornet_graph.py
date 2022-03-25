@@ -301,7 +301,9 @@ class VectorNet(nn.Module):
             dist = lane_out.view(batch_size, social_num, -1)
             dist = self.dist_emb(dist)
             social_inp = self.fusion2(torch.cat([agent_batch, dist], -1))
+            print("social_inp.shape:", social_inp.shape)
             social_mem = self.social_enc(social_inp, agent_mask)
+            print("social_mem.shape:", social_mem.shape)
             social_out = social_mem.unsqueeze(
                 dim=2).repeat(1, 1, self.num_queries, 1)
             out = torch.cat([social_out, lane_out], -1)
