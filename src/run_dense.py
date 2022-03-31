@@ -245,8 +245,17 @@ def demo_basic(rank, world_size, kwargs, queue):
             model_recover = torch.load(args.model_recover_path)
             model.load_state_dict(model_recover)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
-    #optimizer = torch.optim.AdamW(model.parameters(), lr=0.00009, weight_decay=1e-4)
+    if 'set_predict' in args.other_params:
+        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.learning_rate)
+    elif 'complete_traj-3' in args.other_params:
+        optimizer = torch.optim.Adam(
+            [each[1] for each in model.named_parameters() if not str(each[0]).startswith('module.decoder.complete_traj')],
+            lr=args.learning_rate)
+        optimizer_2 = torch.optim.Adam(
+            [each[1] for each in model.named_parameters() if str(each[0]).startswith('module.decoder.complete_traj')],
+            lr=args.learning_rate)
+    else:
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
     print("******using adamw******")
     if rank == 0 and world_size > 0:
         receive = queue.get()
