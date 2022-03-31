@@ -305,14 +305,6 @@ class VectorNet(nn.Module):
         outputs_coord, coord_length = utils.merge_tensors_coor(outputs_coord_batch,hidden_size0=50, hidden_size1=2, device=device)
         outputs_class, class_length = utils.merge_tensors_class(outputs_class_batch,hidden_size0=50, device=device)
         outputs_traj, traj_length = utils.merge_tensors_traj(outputs_traj_batch, hidden_size0=50, hidden_size1=30, hidden_size2=2, device=device)
-        #print("coord_length", coord_length)
-        #print("class_length", class_length)
-
-        #print("outputs_coord.shape", outputs_coord.shape)
-        #print("outputs_class.shape", outputs_class.shape)
-        #print("outputs_traj.shape", outputs_traj.shape)
-
-
         output = self.decoder(mapping, batch_size, outputs_coord, outputs_class, outputs_traj, coord_length, device=device)
         #print("output: ", output)
 
