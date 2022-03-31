@@ -20,8 +20,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 def compile_pyx_files():
     if True:
         os.chdir('src/')
-        if not os.path.exists('utils_cython.c') or not os.path.exists('utils_cython.cpython-36m-x86_64-linux-gnu.so') or \
-                os.path.getmtime('utils_cython.pyx') > os.path.getmtime('utils_cython.cpython-36m-x86_64-linux-gnu.so'):
+        if not os.path.exists('utils_cython.c') or \
+                os.path.getmtime('utils_cython.pyx') > os.path.getmtime('utils_cython.c'):
             os.system('cython -a utils_cython.pyx && python setup.py build_ext --inplace')
         os.chdir('../')
 
@@ -31,7 +31,6 @@ compile_pyx_files()
 
 import utils, structs
 from modeling.vectornet_dense import VectorNet
-#from modeling.vectornet_centerness_dis_6 import VectorNet
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
@@ -44,15 +43,6 @@ def is_main_device(device):
     return isinstance(device, torch.device) or device == 0
 
 
-"""
-def learning_rate_decay(args, i_epoch, optimizer, optimizer_2=None):
-    utils.i_epoch = i_epoch
-
-
-    if i_epoch > 0 and i_epoch % 20 == 0:
-        for p in optimizer.param_groups:
-            p['lr'] *= 0.3
-"""
 def learning_rate_decay(args, i_epoch, optimizer, optimizer_2=None):
     utils.i_epoch = i_epoch
 
@@ -170,19 +160,18 @@ def train_one_epoch(model, iter_bar, optimizer, device, args: utils.Args, i_epoc
             max_iter_num -= 1
             if max_iter_num == 0:
                 break
-        #print("len(batch)", len(batch))
         loss, DE, _ = model(batch, device)
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.1)
+
         if is_main_device(device):
             iter_bar.set_description(f'loss={loss.item():.3f}')
 
         final_idx = batch[0].get('final_idx', -1)
         li_FDE.extend([each for each in DE[:, final_idx]])
 
-        #if optimizer_2 is not None:
-        #    optimizer_2.step()
-        #    optimizer_2.zero_grad()
+        if optimizer_2 is not None:
+            optimizer_2.step()
+            optimizer_2.zero_grad()
 
         optimizer.step()
         optimizer.zero_grad()
@@ -209,8 +198,7 @@ def train_one_epoch(model, iter_bar, optimizer, device, args: utils.Args, i_epoc
                       utils.get_miss_rate(li_FDE, dis=6.0))
 
         utils.logging(f'FDE: {np.mean(li_FDE) if len(li_FDE) > 0 else None}',
-                      f'MR(2,4,6): {miss_rates}',
-                      utils.other_errors_to_string(),
+                      f'MR(2m,4m,6m): {miss_rates}',
                       type='train_loss', to_screen=True)
 
 
@@ -231,19 +219,9 @@ def demo_basic(rank, world_size, kwargs, queue):
         utils.args = args
         model = VectorNet(args).to(rank)
 
-        if args.model_recover_path is not None:
-            print("Recovering from:", args.model_recover_path)
-            model_recover = torch.load(args.model_recover_path)
-            model.load_state_dict(model_recover)
-
         model = DDP(model, device_ids=[rank], find_unused_parameters=True)
     else:
         model = VectorNet(args).to(rank)
-
-        if args.model_recover_path is not None:
-            print("Recovering from:", args.model_recover_path)
-            model_recover = torch.load(args.model_recover_path)
-            model.load_state_dict(model_recover)
 
     if 'set_predict' in args.other_params:
         optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.learning_rate)
@@ -256,7 +234,7 @@ def demo_basic(rank, world_size, kwargs, queue):
             lr=args.learning_rate)
     else:
         optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
-    print("******using adamw******")
+
     if rank == 0 and world_size > 0:
         receive = queue.get()
         assert receive == True
@@ -271,32 +249,30 @@ def demo_basic(rank, world_size, kwargs, queue):
         train_dataset = Dataset(args, args.train_batch_size, to_screen=False)
 
         train_sampler = DistributedSampler(train_dataset, shuffle=args.do_train)
-
+        assert args.train_batch_size == 64, 'The optimal total batch size for training is 64'
         assert args.train_batch_size % world_size == 0
         train_dataloader = torch.utils.data.DataLoader(
             train_dataset, sampler=train_sampler,
             batch_size=args.train_batch_size // world_size,
             collate_fn=utils.batch_list_to_batch_tensors)
-    print("*******************************************model**********************************************")
-    #print(model)
+
     for i_epoch in range(int(args.num_train_epochs)):
-        #if 'complete_traj-3' in args.other_params:
-        #    learning_rate_decay(args, i_epoch, optimizer, optimizer_2)
-        #else:
-        learning_rate_decay(args, i_epoch, optimizer)
+        if 'complete_traj-3' in args.other_params:
+            learning_rate_decay(args, i_epoch, optimizer, optimizer_2)
+        else:
+            learning_rate_decay(args, i_epoch, optimizer)
         utils.logging(optimizer.state_dict()['param_groups'])
         if rank == 0:
             print('Epoch: {}/{}'.format(i_epoch, int(args.num_train_epochs)), end='  ')
             print('Learning Rate = %5.8f' % optimizer.state_dict()['param_groups'][0]['lr'])
         train_sampler.set_epoch(i_epoch)
-
         if rank == 0:
             iter_bar = tqdm(train_dataloader, desc='Iter (loss=X.XXX)')
         else:
             iter_bar = train_dataloader
 
         if 'complete_traj-3' in args.other_params:
-            train_one_epoch(model, iter_bar, optimizer, rank, args, i_epoch, queue)
+            train_one_epoch(model, iter_bar, optimizer, rank, args, i_epoch, queue, optimizer_2)
         else:
             train_one_epoch(model, iter_bar, optimizer, rank, args, i_epoch, queue)
 
