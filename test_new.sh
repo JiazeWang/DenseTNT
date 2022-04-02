@@ -11,4 +11,4 @@ CUDA_VISIBLE_DEVICES=0 python src/run_centerness_6.py --argoverse --future_frame
     point_level-4-3 complete_traj complete_traj-3 \
   --model_recover_path centerness_v4_6/model_save/model.60.bin \
   --reuse_temp_file --temp_file_dir output \
-  --do_eval --eval_batch_size 16
+  --do_eval --eval_batch_size 16  --eval_params optimization MRminFDE cnt_sample=9 opti_time=0.1
